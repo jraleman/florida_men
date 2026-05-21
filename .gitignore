@@ -1,0 +1,9 @@
+# Godot 4 generated files
+.godot/
+
+# Export artifacts
+*.apk
+*.aab
+*.exe
+*.x86_64
+*.app

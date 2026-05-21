@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/mini_games/placeholder_mini_game.gd" id="1"]
+
+[node name="LawnmowerRace" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+game_title = "Lawnmower Race"
+game_headline = "Florida Man Leads Police on Drunken Slow-Speed Chase on a Lawnmower"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+text = "Lawnmower Race"
+horizontal_alignment = 1
+
+[node name="HeadlineLabel" type="Label" parent="VBoxContainer"]
+text = "Florida Man Leads Police on Drunken Slow-Speed Chase on a Lawnmower"
+horizontal_alignment = 1
+
+[node name="FinishButton" type="Button" parent="VBoxContainer"]
+text = "Finish Round (Placeholder)"
