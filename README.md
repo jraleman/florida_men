@@ -1,6 +1,6 @@
 # FloridaMen
 
-Video game collection of mini-games created using Unreal Engine and some other cool stuff.
+Video game collection of mini-games created using Godot and some other cool stuff.
 
 ### Step 1: Conceptualization
 
@@ -29,10 +29,10 @@ Video game collection of mini-games created using Unreal Engine and some other c
 - **Game Design Document (GDD):** Write a comprehensive GDD detailing game mechanics, mini-games, art style, story (if any), character designs, and technical requirements.
 - **Prototype Plan:** Outline which mini-game you’ll prototype first to test the concept.
 
-### Step 3: Unreal Engine Setup
+### Step 3: Godot Setup
 
-- **Install Unreal Engine:** Make sure you have the latest version installed.
-- **Project Setup:** Create a new project in Unreal Engine, selecting the appropriate templates for a party game.
+- **Install Godot:** Make sure you have the latest version installed.
+- **Project Setup:** Create a new project in Godot, selecting the appropriate templates for a party game.
 - **Asset Creation:** Start creating or sourcing assets – characters, environments, props, etc. (consider stylized or cartoonish assets to match the theme).
 
 ### Step 4: Mini-Game Development
