@@ -13,11 +13,64 @@ const MINI_GAMES := [
 	"res://scenes/mini_games/python_hunt.tscn",
 ]
 
+const MINI_GAME_DATA := {
+	"res://scenes/mini_games/alligator_wrangler.tscn": {
+		"name": "Alligator Wrangler",
+		"rules": [
+			"Move your cursor onto the gator to wrangle it.",
+			"The gator speeds up after each wrangle.",
+			"First player to wrangle 3 times wins.",
+		]
+	},
+	"res://scenes/mini_games/lawnmower_race.tscn": {
+		"name": "Lawnmower Race",
+		"rules": [
+			"Race your lawnmower from start to finish.",
+			"Obstacles (mud, chickens, chairs) slow you down.",
+			"First to cross the finish line wins.",
+		]
+	},
+	"res://scenes/mini_games/hurricane_party.tscn": {
+		"name": "Hurricane Party",
+		"rules": [
+			"Move left and right to catch falling objects.",
+			"Party items: +1 pt  |  Debris: -1 pt",
+			"Highest score when the timer ends wins.",
+		]
+	},
+	"res://scenes/mini_games/rocket_man.tscn": {
+		"name": "Rocket Man",
+		"rules": [
+			"Hold action to thrust up, release to fall.",
+			"Avoid the cave walls as they scroll past.",
+			"Last player still flying wins.",
+		]
+	},
+	"res://scenes/mini_games/flamingo_fiasco.tscn": {
+		"name": "Flamingo Fiasco",
+		"rules": [
+			"Move into flamingos to tag them for a point.",
+			"Flamingos scatter when tagged.",
+			"Most tags when the timer ends wins.",
+		]
+	},
+	"res://scenes/mini_games/python_hunt.tscn": {
+		"name": "Python Hunt",
+		"rules": [
+			"Place traps on grid tiles.",
+			"Score a point when a python walks into your trap.",
+			"Pythons multiply over time — most points wins.",
+		]
+	},
+}
+
 var players: Array = []
 var scores: Dictionary = {}
 var round_number: int = 0
 var mini_game_order: Array = []
 var _mini_game_index: int = 0
+var last_round_winner_id: int = -1
+var last_round_points: Dictionary = {}
 
 func _ready() -> void:
 	_setup_input_actions()
@@ -65,12 +118,16 @@ func clear_session() -> void:
 	round_number = 0
 	_mini_game_index = 0
 	mini_game_order.clear()
+	last_round_winner_id = -1
+	last_round_points.clear()
 
 func start_match() -> void:
 	round_number = 0
 	_mini_game_index = 0
 	mini_game_order = MINI_GAMES.duplicate()
 	mini_game_order.shuffle()
+	last_round_winner_id = -1
+	last_round_points.clear()
 	for p in players:
 		scores[p.id] = 0
 
@@ -78,14 +135,25 @@ func get_current_mini_game_scene() -> String:
 	return mini_game_order[_mini_game_index % mini_game_order.size()]
 
 func get_current_mini_game_name() -> String:
-	var path: String = get_current_mini_game_scene()
-	return path.get_file().get_basename().replace("_", " ").capitalize()
+	var path := get_current_mini_game_scene()
+	var data: Dictionary = MINI_GAME_DATA.get(path, {})
+	return data.get("name", path.get_file().get_basename().replace("_", " ").capitalize())
+
+func get_current_mini_game_rules() -> Array:
+	var path := get_current_mini_game_scene()
+	var data: Dictionary = MINI_GAME_DATA.get(path, {})
+	return data.get("rules", [])
 
 func apply_results(results: Array) -> void:
 	# results: Array of {player_id, placement} where placement 0 = first place
+	last_round_points.clear()
+	last_round_winner_id = -1
 	for entry in results:
 		var pts: int = PLACEMENT_POINTS[mini(entry.placement, PLACEMENT_POINTS.size() - 1)]
+		last_round_points[entry.player_id] = pts
 		scores[entry.player_id] += pts
+		if entry.placement == 0:
+			last_round_winner_id = entry.player_id
 	_mini_game_index += 1
 	round_number += 1
 
@@ -98,6 +166,14 @@ func get_sorted_scores() -> Array:
 		result.append({"id": p.id, "name": p.name, "score": scores.get(p.id, 0)})
 	result.sort_custom(func(a, b): return a.score > b.score)
 	return result
+
+func get_last_round_winner_name() -> String:
+	if last_round_winner_id == -1:
+		return ""
+	for p in players:
+		if p.id == last_round_winner_id:
+			return p.name
+	return ""
 
 func go_to(scene_path: String) -> void:
 	get_tree().change_scene_to_file(scene_path)

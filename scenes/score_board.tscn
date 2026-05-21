@@ -15,6 +15,10 @@ anchor_bottom = 1.0
 text = "Scores"
 horizontal_alignment = 1
 
+[node name="RoundWinnerLabel" type="Label" parent="VBoxContainer"]
+text = ""
+horizontal_alignment = 1
+
 [node name="ScoresContainer" type="VBoxContainer" parent="VBoxContainer"]
 
 [node name="ContinueButton" type="Button" parent="VBoxContainer"]

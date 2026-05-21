@@ -2,6 +2,7 @@ extends Control
 
 @onready var round_label: Label = $VBoxContainer/RoundLabel
 @onready var game_name_label: Label = $VBoxContainer/GameNameLabel
+@onready var rules_label: Label = $VBoxContainer/RulesLabel
 @onready var countdown_label: Label = $VBoxContainer/CountdownLabel
 
 var _countdown: float = 3.0
@@ -9,6 +10,7 @@ var _countdown: float = 3.0
 func _ready() -> void:
 	round_label.text = "Round %d / %d" % [GameSession.round_number + 1, GameSession.ROUNDS_PER_MATCH]
 	game_name_label.text = GameSession.get_current_mini_game_name()
+	rules_label.text = "\n".join(GameSession.get_current_mini_game_rules())
 
 func _process(delta: float) -> void:
 	_countdown -= delta

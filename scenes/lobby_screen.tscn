@@ -21,17 +21,61 @@ horizontal_alignment = 1
 
 [node name="PlayerSlots" type="HBoxContainer" parent="VBoxContainer"]
 
-[node name="Slot1" type="Label" parent="VBoxContainer/PlayerSlots"]
-text = "Player 1  [ press action to join ]"
+[node name="Slot1" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
 
-[node name="Slot2" type="Label" parent="VBoxContainer/PlayerSlots"]
-text = "Player 2  [ press action to join ]"
+[node name="SlotName" type="Label" parent="VBoxContainer/PlayerSlots/Slot1"]
+text = "Player 1"
+horizontal_alignment = 1
 
-[node name="Slot3" type="Label" parent="VBoxContainer/PlayerSlots"]
-text = "Player 3  [ press action to join ]"
+[node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot1"]
+text = "Press action to join"
+horizontal_alignment = 1
 
-[node name="Slot4" type="Label" parent="VBoxContainer/PlayerSlots"]
-text = "Player 4  [ press action to join ]"
+[node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot1"]
+text = "Move: WASD  |  Action: Space"
+horizontal_alignment = 1
+
+[node name="Slot2" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
+
+[node name="SlotName" type="Label" parent="VBoxContainer/PlayerSlots/Slot2"]
+text = "Player 2"
+horizontal_alignment = 1
+
+[node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot2"]
+text = "Press action to join"
+horizontal_alignment = 1
+
+[node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot2"]
+text = "Move: Arrows  |  Action: Enter"
+horizontal_alignment = 1
+
+[node name="Slot3" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
+
+[node name="SlotName" type="Label" parent="VBoxContainer/PlayerSlots/Slot3"]
+text = "Player 3"
+horizontal_alignment = 1
+
+[node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot3"]
+text = "Press action to join"
+horizontal_alignment = 1
+
+[node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot3"]
+text = "Move: IJKL  |  Action: U"
+horizontal_alignment = 1
+
+[node name="Slot4" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
+
+[node name="SlotName" type="Label" parent="VBoxContainer/PlayerSlots/Slot4"]
+text = "Player 4"
+horizontal_alignment = 1
+
+[node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot4"]
+text = "Press action to join"
+horizontal_alignment = 1
+
+[node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot4"]
+text = "Move: Numpad 8/2/4/6  |  Action: Numpad 0"
+horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="VBoxContainer"]
 text = "Start Game"

@@ -1,20 +1,27 @@
 extends Control
 
-@onready var slot_labels: Array = []
 @onready var start_button: Button = $VBoxContainer/StartButton
 
-const SLOT_PATHS := [
-	"VBoxContainer/PlayerSlots/Slot1",
-	"VBoxContainer/PlayerSlots/Slot2",
-	"VBoxContainer/PlayerSlots/Slot3",
-	"VBoxContainer/PlayerSlots/Slot4",
+const SLOT_STATUS_PATHS := [
+	"VBoxContainer/PlayerSlots/Slot1/SlotStatus",
+	"VBoxContainer/PlayerSlots/Slot2/SlotStatus",
+	"VBoxContainer/PlayerSlots/Slot3/SlotStatus",
+	"VBoxContainer/PlayerSlots/Slot4/SlotStatus",
 ]
 
+const PLAYER_CONTROLS := [
+	"Move: WASD  |  Action: Space",
+	"Move: Arrows  |  Action: Enter",
+	"Move: IJKL  |  Action: U",
+	"Move: Numpad 8/2/4/6  |  Action: Numpad 0",
+]
+
+var _status_labels: Array = []
+
 func _ready() -> void:
-	for path in SLOT_PATHS:
-		slot_labels.append(get_node(path) as Label)
+	for path in SLOT_STATUS_PATHS:
+		_status_labels.append(get_node(path) as Label)
 	start_button.pressed.connect(_on_start_pressed)
-	# Player 1 is always in as host
 	GameSession.add_player(0)
 	_refresh_slots()
 
@@ -27,7 +34,7 @@ func _process(_delta: float) -> void:
 
 func _toggle_player(player_id: int) -> void:
 	if player_id == 0:
-		return  # player 1 (host) cannot leave the lobby
+		return  # player 1 (host) cannot leave
 	var already_joined := false
 	for p in GameSession.players:
 		if p.id == player_id:
@@ -45,9 +52,9 @@ func _refresh_slots() -> void:
 		joined_ids.append(p.id)
 	for i in GameSession.MAX_PLAYERS:
 		if i in joined_ids:
-			slot_labels[i].text = "Player %d  [READY]" % (i + 1)
+			_status_labels[i].text = "READY"
 		else:
-			slot_labels[i].text = "Player %d  [ press action to join ]" % (i + 1)
+			_status_labels[i].text = "Press action to join"
 	start_button.disabled = GameSession.players.size() < 1
 
 func _on_start_pressed() -> void:
