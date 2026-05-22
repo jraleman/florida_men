@@ -16,16 +16,11 @@ func setup() -> void:
 	finish_button.pressed.connect(_on_finish_pressed)
 
 func start() -> void:
-	pass  # no auto-timer in placeholder; button drives the end
+	pass  # no auto-timer; button drives the end
 
 func _on_finish_pressed() -> void:
-	var players := get_players()
 	var player_ids := []
-	for p in players:
+	for p in get_players():
 		player_ids.append(p.id)
 	player_ids.shuffle()
-	var results := []
-	for i in player_ids.size():
-		results.append({"player_id": player_ids[i], "placement": i})
-	GameSession.apply_results(results)
-	GameSession.go_to("res://scenes/score_board.tscn")
+	end_game(build_results_from_order(player_ids))
