@@ -1,0 +1,50 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/input_settings.gd" id="1"]
+
+[node name="InputSettings" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer"]
+text = "Input Settings"
+horizontal_alignment = 1
+
+[node name="HeaderRow" type="HBoxContainer" parent="VBoxContainer"]
+
+[node name="PlayerHeader" type="Label" parent="VBoxContainer/HeaderRow"]
+text = "Player    "
+
+[node name="UpHeader" type="Label" parent="VBoxContainer/HeaderRow"]
+text = "Up         "
+
+[node name="DownHeader" type="Label" parent="VBoxContainer/HeaderRow"]
+text = "Down       "
+
+[node name="LeftHeader" type="Label" parent="VBoxContainer/HeaderRow"]
+text = "Left       "
+
+[node name="RightHeader" type="Label" parent="VBoxContainer/HeaderRow"]
+text = "Right      "
+
+[node name="ActionHeader" type="Label" parent="VBoxContainer/HeaderRow"]
+text = "Action"
+
+[node name="BindingsGrid" type="GridContainer" parent="VBoxContainer"]
+columns = 6
+
+[node name="BottomRow" type="HBoxContainer" parent="VBoxContainer"]
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/BottomRow"]
+text = "Save"
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/BottomRow"]
+text = "Reset to Defaults"
+
+[node name="BackButton" type="Button" parent="VBoxContainer/BottomRow"]
+text = "Back to Menu"

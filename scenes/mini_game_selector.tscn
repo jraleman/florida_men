@@ -15,6 +15,10 @@ anchor_bottom = 1.0
 text = "Round 1 / 6"
 horizontal_alignment = 1
 
+[node name="StandingsLabel" type="Label" parent="VBoxContainer"]
+text = ""
+horizontal_alignment = 1
+
 [node name="GameNameLabel" type="Label" parent="VBoxContainer"]
 text = "Mini Game"
 horizontal_alignment = 1

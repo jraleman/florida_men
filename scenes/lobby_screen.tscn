@@ -49,6 +49,9 @@ horizontal_alignment = 1
 text = "Move: Arrows  |  Action: Enter"
 horizontal_alignment = 1
 
+[node name="AddAIButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot2"]
+text = "Add AI"
+
 [node name="Slot3" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
 
 [node name="SlotName" type="Label" parent="VBoxContainer/PlayerSlots/Slot3"]
@@ -63,6 +66,9 @@ horizontal_alignment = 1
 text = "Move: IJKL  |  Action: U"
 horizontal_alignment = 1
 
+[node name="AddAIButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot3"]
+text = "Add AI"
+
 [node name="Slot4" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
 
 [node name="SlotName" type="Label" parent="VBoxContainer/PlayerSlots/Slot4"]
@@ -76,6 +82,9 @@ horizontal_alignment = 1
 [node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot4"]
 text = "Move: Numpad 8/2/4/6  |  Action: Numpad 0"
 horizontal_alignment = 1
+
+[node name="AddAIButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot4"]
+text = "Add AI"
 
 [node name="StartButton" type="Button" parent="VBoxContainer"]
 text = "Start Game"

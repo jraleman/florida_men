@@ -65,26 +65,31 @@ const MINI_GAME_DATA := {
 }
 
 var players: Array = []
+var ai_players: Array = []
 var scores: Dictionary = {}
 var round_number: int = 0
 var mini_game_order: Array = []
 var _mini_game_index: int = 0
 var last_round_winner_id: int = -1
 var last_round_points: Dictionary = {}
+# Each entry: {game_name, placements: {player_id->int}, points: {player_id->int}}
+var round_history: Array = []
 
 func _ready() -> void:
 	_setup_input_actions()
 
 func _setup_input_actions() -> void:
-	# [up, down, left, right, action] per player
+	_setup_input_actions_defaults()
+	load_input_settings()
+
+func _setup_input_actions_defaults() -> void:
 	var bindings := [
-		[KEY_W,      KEY_S,       KEY_A,      KEY_D,      KEY_SPACE],
-		[KEY_UP,     KEY_DOWN,    KEY_LEFT,   KEY_RIGHT,  KEY_ENTER],
-		[KEY_I,      KEY_K,       KEY_J,      KEY_L,      KEY_U],
-		[KEY_KP_8,   KEY_KP_2,   KEY_KP_4,   KEY_KP_6,   KEY_KP_0],
+		[KEY_W,    KEY_S,     KEY_A,     KEY_D,     KEY_SPACE],
+		[KEY_UP,   KEY_DOWN,  KEY_LEFT,  KEY_RIGHT, KEY_ENTER],
+		[KEY_I,    KEY_K,     KEY_J,     KEY_L,     KEY_U],
+		[KEY_KP_8, KEY_KP_2, KEY_KP_4,  KEY_KP_6,  KEY_KP_0],
 	]
 	var suffixes := ["up", "down", "left", "right", "action"]
-
 	for i in MAX_PLAYERS:
 		for j in suffixes.size():
 			var action_name := "player_%d_%s" % [i + 1, suffixes[j]]
@@ -105,6 +110,29 @@ func add_player(player_id: int) -> void:
 	players.append({"id": player_id, "name": "Player %d" % (player_id + 1)})
 	scores[player_id] = 0
 
+func add_ai_player(player_id: int) -> void:
+	if player_id >= MAX_PLAYERS or player_id == 0:
+		return
+	for p in players:
+		if p.id == player_id:
+			return
+	players.append({"id": player_id, "name": "Player %d" % (player_id + 1)})
+	scores[player_id] = 0
+	ai_players.append({"id": player_id})
+
+func remove_ai_player(player_id: int) -> void:
+	remove_player(player_id)
+	for i in range(ai_players.size() - 1, -1, -1):
+		if ai_players[i].id == player_id:
+			ai_players.remove_at(i)
+			break
+
+func is_ai_player(player_id: int) -> bool:
+	for p in ai_players:
+		if p.id == player_id:
+			return true
+	return false
+
 func remove_player(player_id: int) -> void:
 	for i in range(players.size() - 1, -1, -1):
 		if players[i].id == player_id:
@@ -114,12 +142,14 @@ func remove_player(player_id: int) -> void:
 
 func clear_session() -> void:
 	players.clear()
+	ai_players.clear()
 	scores.clear()
 	round_number = 0
 	_mini_game_index = 0
 	mini_game_order.clear()
 	last_round_winner_id = -1
 	last_round_points.clear()
+	round_history.clear()
 
 func start_match() -> void:
 	round_number = 0
@@ -128,8 +158,21 @@ func start_match() -> void:
 	mini_game_order.shuffle()
 	last_round_winner_id = -1
 	last_round_points.clear()
+	round_history.clear()
 	for p in players:
 		scores[p.id] = 0
+
+func rematch() -> void:
+	round_number = 0
+	_mini_game_index = 0
+	mini_game_order = MINI_GAMES.duplicate()
+	mini_game_order.shuffle()
+	last_round_winner_id = -1
+	last_round_points.clear()
+	round_history.clear()
+	for p in players:
+		scores[p.id] = 0
+	go_to("res://scenes/mini_game_selector.tscn")
 
 func get_current_mini_game_scene() -> String:
 	return mini_game_order[_mini_game_index % mini_game_order.size()]
@@ -145,15 +188,23 @@ func get_current_mini_game_rules() -> Array:
 	return data.get("rules", [])
 
 func apply_results(results: Array) -> void:
-	# results: Array of {player_id, placement} where placement 0 = first place
 	last_round_points.clear()
 	last_round_winner_id = -1
+	var history_placements: Dictionary = {}
+	var history_points: Dictionary = {}
 	for entry in results:
 		var pts: int = PLACEMENT_POINTS[mini(entry.placement, PLACEMENT_POINTS.size() - 1)]
 		last_round_points[entry.player_id] = pts
 		scores[entry.player_id] += pts
+		history_placements[entry.player_id] = entry.placement
+		history_points[entry.player_id] = pts
 		if entry.placement == 0:
 			last_round_winner_id = entry.player_id
+	round_history.append({
+		"game_name": get_current_mini_game_name(),
+		"placements": history_placements,
+		"points": history_points,
+	})
 	_mini_game_index += 1
 	round_number += 1
 
@@ -163,9 +214,24 @@ func is_match_over() -> bool:
 func get_sorted_scores() -> Array:
 	var result := []
 	for p in players:
-		result.append({"id": p.id, "name": p.name, "score": scores.get(p.id, 0)})
-	result.sort_custom(func(a, b): return a.score > b.score)
+		var wins := 0
+		for round_data in round_history:
+			if round_data.placements.get(p.id, 99) == 0:
+				wins += 1
+		result.append({"id": p.id, "name": p.name, "score": scores.get(p.id, 0), "wins": wins})
+	result.sort_custom(func(a, b):
+		if a.score != b.score:
+			return a.score > b.score
+		return a.wins > b.wins
+	)
 	return result
+
+func get_standings_text() -> String:
+	var sorted := get_sorted_scores()
+	var parts := []
+	for i in sorted.size():
+		parts.append("%s %dpts" % [sorted[i].name, sorted[i].score])
+	return "  >  ".join(PackedStringArray(parts))
 
 func get_last_round_winner_name() -> String:
 	if last_round_winner_id == -1:
@@ -174,6 +240,41 @@ func get_last_round_winner_name() -> String:
 		if p.id == last_round_winner_id:
 			return p.name
 	return ""
+
+func save_input_settings() -> void:
+	var cfg := ConfigFile.new()
+	var suffixes := ["up", "down", "left", "right", "action"]
+	for i in MAX_PLAYERS:
+		var n: int = i + 1
+		for suffix in suffixes:
+			var action_name := "player_%d_%s" % [n, suffix]
+			var events := InputMap.action_get_events(action_name)
+			if not events.is_empty():
+				var ev: InputEvent = events[0]
+				if ev is InputEventKey:
+					cfg.set_value("bindings", action_name, (ev as InputEventKey).physical_keycode)
+	cfg.save("user://input_settings.cfg")
+
+func load_input_settings() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://input_settings.cfg") != OK:
+		return
+	var suffixes := ["up", "down", "left", "right", "action"]
+	for i in MAX_PLAYERS:
+		var n: int = i + 1
+		for suffix in suffixes:
+			var action_name := "player_%d_%s" % [n, suffix]
+			if cfg.has_section_key("bindings", action_name):
+				var keycode: int = cfg.get_value("bindings", action_name, 0)
+				if keycode != 0:
+					InputMap.action_erase_events(action_name)
+					var ev := InputEventKey.new()
+					ev.physical_keycode = keycode
+					InputMap.action_add_event(action_name, ev)
+
+func reset_input_settings() -> void:
+	_setup_input_actions_defaults()
+	save_input_settings()
 
 func go_to(scene_path: String) -> void:
 	get_tree().change_scene_to_file(scene_path)
