@@ -41,11 +41,11 @@ func _ready() -> void:
 	GameSession.add_player(0)
 	_refresh_slots()
 
-func _process(_delta: float) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	for i in GameSession.MAX_PLAYERS:
-		if Input.is_action_just_pressed("player_%d_action" % (i + 1)):
+		if event.is_action_pressed("player_%d_action" % (i + 1)):
 			_toggle_player(i)
-	if Input.is_action_just_pressed("ui_cancel"):
+	if event.is_action_pressed("ui_cancel"):
 		GameSession.go_to("res://scenes/main_menu.tscn")
 
 func _toggle_player(player_id: int) -> void:
