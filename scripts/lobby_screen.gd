@@ -85,4 +85,4 @@ func _refresh_slots() -> void:
 
 func _on_start_pressed() -> void:
 	GameSession.start_match()
-	GameSession.go_to("res://scenes/mini_game_selector.tscn")
+	GameSession.go_to("res://scenes/board.tscn")

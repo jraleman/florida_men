@@ -101,4 +101,4 @@ func _on_continue_pressed() -> void:
 	if GameSession.is_match_over():
 		GameSession.go_to("res://scenes/main_menu.tscn")
 	else:
-		GameSession.go_to("res://scenes/mini_game_selector.tscn")
+		GameSession.go_to("res://scenes/board.tscn")

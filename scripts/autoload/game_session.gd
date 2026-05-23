@@ -75,6 +75,10 @@ var last_round_points: Dictionary = {}
 # Each entry: {game_name, placements: {player_id->int}, points: {player_id->int}}
 var round_history: Array = []
 
+# Board state
+var board_positions: Dictionary = {}  # player_id -> space index (0-23)
+var board_coins: Dictionary = {}      # player_id -> coin count
+
 func _ready() -> void:
 	_setup_input_actions()
 
@@ -150,6 +154,19 @@ func clear_session() -> void:
 	last_round_winner_id = -1
 	last_round_points.clear()
 	round_history.clear()
+	board_positions.clear()
+	board_coins.clear()
+
+func init_board() -> void:
+	board_positions.clear()
+	board_coins.clear()
+	for p in players:
+		board_positions[p.id] = 0
+		board_coins[p.id] = 0
+
+func add_board_coins(player_id: int, amount: int) -> void:
+	var current: int = board_coins.get(player_id, 0)
+	board_coins[player_id] = maxi(0, current + amount)
 
 func start_match() -> void:
 	round_number = 0
@@ -161,6 +178,7 @@ func start_match() -> void:
 	round_history.clear()
 	for p in players:
 		scores[p.id] = 0
+	init_board()
 
 func rematch() -> void:
 	round_number = 0
@@ -172,7 +190,8 @@ func rematch() -> void:
 	round_history.clear()
 	for p in players:
 		scores[p.id] = 0
-	go_to("res://scenes/mini_game_selector.tscn")
+	init_board()
+	go_to("res://scenes/board.tscn")
 
 func get_current_mini_game_scene() -> String:
 	return mini_game_order[_mini_game_index % mini_game_order.size()]
