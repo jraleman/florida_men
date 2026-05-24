@@ -115,7 +115,7 @@ func add_player(player_id: int) -> void:
 	scores[player_id] = 0
 
 func add_ai_player(player_id: int) -> void:
-	if player_id >= MAX_PLAYERS or player_id == 0:
+	if player_id >= MAX_PLAYERS:
 		return
 	for p in players:
 		if p.id == player_id:
@@ -123,6 +123,16 @@ func add_ai_player(player_id: int) -> void:
 	players.append({"id": player_id, "name": "Player %d" % (player_id + 1)})
 	scores[player_id] = 0
 	ai_players.append({"id": player_id})
+
+func set_ai_player(player_id: int, is_ai: bool) -> void:
+	if is_ai:
+		if not is_ai_player(player_id):
+			ai_players.append({"id": player_id})
+	else:
+		for i in range(ai_players.size() - 1, -1, -1):
+			if (ai_players[i] as Dictionary).get("id") == player_id:
+				ai_players.remove_at(i)
+				break
 
 func remove_ai_player(player_id: int) -> void:
 	remove_player(player_id)

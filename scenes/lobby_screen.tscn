@@ -16,7 +16,7 @@ text = "LOBBY"
 horizontal_alignment = 1
 
 [node name="Instructions" type="Label" parent="VBoxContainer"]
-text = "Press your action key to join  |  Esc to go back"
+text = "Toggle each slot between AI and Human  |  Esc to go back"
 horizontal_alignment = 1
 
 [node name="PlayerSlots" type="HBoxContainer" parent="VBoxContainer"]
@@ -28,12 +28,15 @@ text = "Player 1"
 horizontal_alignment = 1
 
 [node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot1"]
-text = "Press action to join"
+text = "Human"
 horizontal_alignment = 1
 
 [node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot1"]
 text = "Move: WASD  |  Action: Space"
 horizontal_alignment = 1
+
+[node name="ToggleButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot1"]
+text = "Switch to AI"
 
 [node name="Slot2" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
 
@@ -42,15 +45,15 @@ text = "Player 2"
 horizontal_alignment = 1
 
 [node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot2"]
-text = "Press action to join"
+text = "AI"
 horizontal_alignment = 1
 
 [node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot2"]
 text = "Move: Arrows  |  Action: Enter"
 horizontal_alignment = 1
 
-[node name="AddAIButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot2"]
-text = "Add AI"
+[node name="ToggleButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot2"]
+text = "Switch to Human"
 
 [node name="Slot3" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
 
@@ -59,15 +62,15 @@ text = "Player 3"
 horizontal_alignment = 1
 
 [node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot3"]
-text = "Press action to join"
+text = "AI"
 horizontal_alignment = 1
 
 [node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot3"]
 text = "Move: IJKL  |  Action: U"
 horizontal_alignment = 1
 
-[node name="AddAIButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot3"]
-text = "Add AI"
+[node name="ToggleButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot3"]
+text = "Switch to Human"
 
 [node name="Slot4" type="VBoxContainer" parent="VBoxContainer/PlayerSlots"]
 
@@ -76,16 +79,15 @@ text = "Player 4"
 horizontal_alignment = 1
 
 [node name="SlotStatus" type="Label" parent="VBoxContainer/PlayerSlots/Slot4"]
-text = "Press action to join"
+text = "AI"
 horizontal_alignment = 1
 
 [node name="SlotControls" type="Label" parent="VBoxContainer/PlayerSlots/Slot4"]
 text = "Move: Numpad 8/2/4/6  |  Action: Numpad 0"
 horizontal_alignment = 1
 
-[node name="AddAIButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot4"]
-text = "Add AI"
+[node name="ToggleButton" type="Button" parent="VBoxContainer/PlayerSlots/Slot4"]
+text = "Switch to Human"
 
 [node name="StartButton" type="Button" parent="VBoxContainer"]
 text = "Start Game"
-disabled = true
