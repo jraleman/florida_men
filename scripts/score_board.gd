@@ -221,7 +221,7 @@ func _populate_scores(match_over: bool) -> void:
 			style.border_width_bottom = 3
 			style.border_color = Color(0.06, 0.03, 0.01, 1)
 
-		panel.add_theme_style_override("panel", style)
+		panel.add_theme_stylebox_override("panel", style)
 
 		var vbox := VBoxContainer.new()
 		vbox.add_theme_constant_override("separation", 3)
