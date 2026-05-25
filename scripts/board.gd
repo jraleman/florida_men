@@ -49,6 +49,11 @@ const PLAYER_COL: Array = [
 	Color(1.00, 0.76, 0.00),
 ]
 
+# ── Scene refs ────────────────────────────────────────────────────────────────
+
+@onready var sub_viewport:      SubViewport    = $SubViewportContainer/SubViewport
+@onready var landing_particles: CPUParticles2D = $LandingParticles
+
 # ── State ─────────────────────────────────────────────────────────────────────
 
 var _spaces:         Array     = []
@@ -70,21 +75,162 @@ var _hop_progress:   float     = 0.0
 var _effect_msg:     String    = ""
 var _ai_delay:       float     = 0.0
 var _board_done:     bool      = false
+var _rng:            RandomNumberGenerator
 
 var _hud:        CanvasLayer
 var _status_lbl: Label
 var _effect_lbl: Label
+var _effect_bg:  ColorRect
 var _coins_lbl:  Label
+
+var _board_root: Node3D = null
 
 # ── Ready ─────────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
+	_rng = RandomNumberGenerator.new()
+	_rng.randomize()
+	_setup_3d_scene()
+	_setup_landing_particles()
 	_build_spaces()
 	_build_hud()
 	_player_order.clear()
 	for p: Dictionary in GameSession.players:
 		_player_order.append(p.id)
 	_begin_turn()
+
+# ── 3D backdrop ───────────────────────────────────────────────────────────────
+
+func _setup_3d_scene() -> void:
+	# Near-top-down camera with slight tilt for depth
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 10, 2.5)
+	cam.rotation_degrees = Vector3(-76, 0, 0)
+	sub_viewport.add_child(cam)
+
+	# Florida daytime sky
+	var world_env := WorldEnvironment.new()
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.30, 0.68, 0.98)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.88, 0.95, 1.0)
+	env.ambient_light_energy = 3.2
+	world_env.environment = env
+	sub_viewport.add_child(world_env)
+
+	# Sun
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-55, 22, 0)
+	sun.light_color = Color(1.0, 0.92, 0.65)
+	sun.light_energy = 3.0
+	sun.shadow_enabled = false
+	sub_viewport.add_child(sun)
+
+	# Fill light from the blue sky side
+	var fill := OmniLight3D.new()
+	fill.position = Vector3(-5, 6, 0)
+	fill.light_color = Color(0.40, 0.65, 1.0)
+	fill.light_energy = 1.8
+	fill.omni_range = 20.0
+	sub_viewport.add_child(fill)
+
+	_board_root = Node3D.new()
+	sub_viewport.add_child(_board_root)
+
+	# Ocean surrounding the island
+	_make_3d_box(_board_root, Vector3(0, -1.2, 0), Vector3(28, 0.8, 18),
+			Color(0.14, 0.52, 0.88), 0.12, 0.50)
+	# Florida island (green landmass)
+	_make_3d_box(_board_root, Vector3(0, -0.6, 0), Vector3(19, 0.8, 12),
+			Color(0.20, 0.62, 0.20), 0.05, 0.80)
+	# Inner terrain (raised slightly, lighter)
+	_make_3d_box(_board_root, Vector3(0, -0.2, 0), Vector3(11.5, 0.5, 7.5),
+			Color(0.30, 0.74, 0.28), 0.04, 0.78)
+
+	# Corner palm trees
+	for corner in [Vector3(-8, 0, -4.5), Vector3(8, 0, -4.5),
+				   Vector3(-8, 0, 4.5),  Vector3(8, 0, 4.5)]:
+		_make_palm(_board_root, corner)
+
+	# Mid-side palms for extra depth
+	_make_palm(_board_root, Vector3(-9, 0, 0))
+	_make_palm(_board_root, Vector3(9, 0, 0))
+
+func _make_3d_box(parent: Node3D, pos: Vector3, sz: Vector3, color: Color,
+		metallic: float, roughness: float) -> void:
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = sz
+	mi.mesh = bm
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.metallic = metallic
+	mat.roughness = roughness
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 1.3
+	mi.material_override = mat
+	mi.position = pos
+	parent.add_child(mi)
+
+func _make_palm(parent: Node3D, pos: Vector3) -> void:
+	# Trunk
+	var trunk := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.height = 2.2
+	cyl.top_radius = 0.10
+	cyl.bottom_radius = 0.18
+	trunk.mesh = cyl
+	var trunk_mat := StandardMaterial3D.new()
+	trunk_mat.albedo_color = Color(0.50, 0.34, 0.14)
+	trunk_mat.emission_enabled = true
+	trunk_mat.emission = Color(0.50, 0.34, 0.14)
+	trunk_mat.emission_energy_multiplier = 1.0
+	trunk.material_override = trunk_mat
+	trunk.position = pos + Vector3(0, 0.7, 0)
+	parent.add_child(trunk)
+
+	# Foliage
+	var top := MeshInstance3D.new()
+	var sph := SphereMesh.new()
+	sph.radius = 0.75
+	sph.height = 1.1
+	top.mesh = sph
+	var top_mat := StandardMaterial3D.new()
+	top_mat.albedo_color = Color(0.10, 0.60, 0.14)
+	top_mat.emission_enabled = true
+	top_mat.emission = Color(0.10, 0.60, 0.14)
+	top_mat.emission_energy_multiplier = 1.4
+	top.material_override = top_mat
+	top.position = pos + Vector3(0, 2.1, 0)
+	parent.add_child(top)
+
+# ── Landing particles ─────────────────────────────────────────────────────────
+
+func _setup_landing_particles() -> void:
+	landing_particles.amount = 60
+	landing_particles.lifetime = 1.6
+	landing_particles.one_shot = true
+	landing_particles.explosiveness = 0.92
+	landing_particles.emitting = false
+	landing_particles.gravity = Vector2(0, 280)
+	landing_particles.initial_velocity_min = 85.0
+	landing_particles.initial_velocity_max = 230.0
+	landing_particles.direction = Vector2(0, -1)
+	landing_particles.spread = 65.0
+	landing_particles.angular_velocity_min = -180.0
+	landing_particles.angular_velocity_max = 180.0
+	landing_particles.scale_amount_min = 4.0
+	landing_particles.scale_amount_max = 10.0
+
+func _spawn_landing_particles(space_idx: int, space_type: int) -> void:
+	var sp: Dictionary = _spaces[space_idx]
+	var pos: Vector2 = sp["pos"]
+	landing_particles.position = pos + Vector2(SPACE_SZ * 0.5, SPACE_SZ * 0.5)
+	landing_particles.color = SPACE_COL[space_type]
+	landing_particles.amount = 30 if space_type == SpaceType.NORMAL else 90
+	landing_particles.restart()
 
 # ── Board layout ──────────────────────────────────────────────────────────────
 
@@ -120,33 +266,61 @@ func _build_hud() -> void:
 	_hud.layer = 10
 	add_child(_hud)
 
+	var status_bg := ColorRect.new()
+	status_bg.set_anchor_and_offset(SIDE_LEFT,   0.0,  0.0)
+	status_bg.set_anchor_and_offset(SIDE_RIGHT,  1.0,  0.0)
+	status_bg.set_anchor_and_offset(SIDE_TOP,    0.0,  0.0)
+	status_bg.set_anchor_and_offset(SIDE_BOTTOM, 0.0, 44.0)
+	status_bg.color = Color(0.0, 0.05, 0.0, 0.72)
+	_hud.add_child(status_bg)
+
 	_status_lbl = Label.new()
 	_status_lbl.set_anchor_and_offset(SIDE_LEFT,   0.0,  0.0)
 	_status_lbl.set_anchor_and_offset(SIDE_RIGHT,  1.0,  0.0)
 	_status_lbl.set_anchor_and_offset(SIDE_TOP,    0.0,  6.0)
-	_status_lbl.set_anchor_and_offset(SIDE_BOTTOM, 0.0, 38.0)
+	_status_lbl.set_anchor_and_offset(SIDE_BOTTOM, 0.0, 42.0)
 	_status_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status_lbl.add_theme_font_size_override("font_size", 18)
+	_status_lbl.add_theme_font_size_override("font_size", 20)
+	_status_lbl.add_theme_color_override("font_color", Color(0.92, 1.00, 0.80, 1))
 	_hud.add_child(_status_lbl)
 
+	_effect_bg = ColorRect.new()
+	_effect_bg.set_anchor_and_offset(SIDE_LEFT,   0.08, 0.0)
+	_effect_bg.set_anchor_and_offset(SIDE_RIGHT,  0.92, 0.0)
+	_effect_bg.set_anchor_and_offset(SIDE_TOP,    0.43, 0.0)
+	_effect_bg.set_anchor_and_offset(SIDE_BOTTOM, 0.62, 0.0)
+	_effect_bg.color = Color(0.0, 0.0, 0.0, 0.72)
+	_effect_bg.visible = false
+	_hud.add_child(_effect_bg)
+
 	_effect_lbl = Label.new()
-	_effect_lbl.set_anchor_and_offset(SIDE_LEFT,   0.1,  0.0)
-	_effect_lbl.set_anchor_and_offset(SIDE_RIGHT,  0.9,  0.0)
-	_effect_lbl.set_anchor_and_offset(SIDE_TOP,    0.45, 0.0)
-	_effect_lbl.set_anchor_and_offset(SIDE_BOTTOM, 0.6,  0.0)
+	_effect_lbl.set_anchor_and_offset(SIDE_LEFT,   0.10, 0.0)
+	_effect_lbl.set_anchor_and_offset(SIDE_RIGHT,  0.90, 0.0)
+	_effect_lbl.set_anchor_and_offset(SIDE_TOP,    0.44, 0.0)
+	_effect_lbl.set_anchor_and_offset(SIDE_BOTTOM, 0.61, 0.0)
 	_effect_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_effect_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 	_effect_lbl.autowrap_mode        = TextServer.AUTOWRAP_WORD_SMART
-	_effect_lbl.add_theme_font_size_override("font_size", 26)
+	_effect_lbl.add_theme_font_size_override("font_size", 28)
+	_effect_lbl.add_theme_color_override("font_color", Color(1.00, 0.95, 0.55, 1))
 	_effect_lbl.visible = false
 	_hud.add_child(_effect_lbl)
 
+	var coins_bg := ColorRect.new()
+	coins_bg.set_anchor_and_offset(SIDE_LEFT,   0.0,  0.0)
+	coins_bg.set_anchor_and_offset(SIDE_RIGHT,  0.20, 0.0)
+	coins_bg.set_anchor_and_offset(SIDE_TOP,    0.0, 44.0)
+	coins_bg.set_anchor_and_offset(SIDE_BOTTOM, 1.0,  0.0)
+	coins_bg.color = Color(0.0, 0.05, 0.0, 0.68)
+	_hud.add_child(coins_bg)
+
 	_coins_lbl = Label.new()
 	_coins_lbl.set_anchor_and_offset(SIDE_LEFT,   0.0,  8.0)
-	_coins_lbl.set_anchor_and_offset(SIDE_RIGHT,  0.22, 0.0)
-	_coins_lbl.set_anchor_and_offset(SIDE_TOP,    0.0, 48.0)
+	_coins_lbl.set_anchor_and_offset(SIDE_RIGHT,  0.20, 0.0)
+	_coins_lbl.set_anchor_and_offset(SIDE_TOP,    0.0, 52.0)
 	_coins_lbl.set_anchor_and_offset(SIDE_BOTTOM, 1.0,  0.0)
 	_coins_lbl.add_theme_font_size_override("font_size", 15)
+	_coins_lbl.add_theme_color_override("font_color", Color(0.82, 0.98, 0.65, 1))
 	_hud.add_child(_coins_lbl)
 	_refresh_coins_lbl()
 
@@ -169,6 +343,9 @@ func _begin_turn() -> void:
 	_ai_delay  = 0.0
 	_state     = TurnState.WAITING_FOR_ROLL
 	_effect_lbl.visible = false
+	_effect_bg.visible  = false
+	if _player_order.is_empty():
+		return
 	var pid: int       = _player_order[_turn_idx]
 	var pname: String  = _player_name(pid)
 	if GameSession.is_ai_player(pid):
@@ -178,6 +355,8 @@ func _begin_turn() -> void:
 		_status_lbl.text = "%s — Press %s to roll!" % [pname, action_key]
 
 func _proc_waiting(delta: float) -> void:
+	if _player_order.is_empty():
+		return
 	var pid: int = _player_order[_turn_idx]
 	if GameSession.is_ai_player(pid):
 		_ai_delay += delta
@@ -199,10 +378,10 @@ func _proc_rolling(delta: float) -> void:
 	_dice_timer += delta
 	_dice_cycle += delta
 	if _dice_cycle >= 0.07:
-		_dice_cycle  = 0.0
-		_dice_value  = randi_range(1, 6)
+		_dice_cycle -= 0.07
+		_dice_value  = _rng.randi_range(1, 6)
 	if _dice_timer >= DICE_ANIM_DURATION:
-		_dice_value     = randi_range(1, 6)
+		_dice_value     = _rng.randi_range(1, 6)
 		_spaces_to_move = _dice_value
 		_hops_done      = 0
 		var pid: int    = _player_order[_turn_idx]
@@ -229,8 +408,10 @@ func _proc_moving(delta: float) -> void:
 			var sp:    Dictionary = _spaces[_hop_to_idx]
 			var stype: int        = sp["type"]
 			_apply_space_effect(pid, stype)
+			_spawn_landing_particles(_hop_to_idx, stype)
 			_effect_lbl.text    = _effect_msg
 			_effect_lbl.visible = true
+			_effect_bg.visible  = true
 			_status_lbl.text    = ""
 			_effect_timer       = 0.0
 			_state              = TurnState.SPACE_EFFECT
@@ -242,6 +423,7 @@ func _proc_effect(delta: float) -> void:
 	_effect_timer += delta
 	if _effect_timer >= EFFECT_DURATION:
 		_effect_lbl.visible = false
+		_effect_bg.visible  = false
 		_trans_timer        = 0.0
 		_state              = TurnState.TRANSITION
 
@@ -269,7 +451,7 @@ func _apply_space_effect(player_id: int, space_type: int) -> void:
 				"A gator nodded.  Nothing else.",
 				"Someone nearby ate a tide pod.",
 			]
-			_effect_msg = opts[randi() % opts.size()]
+			_effect_msg = opts[_rng.randi() % opts.size()]
 		SpaceType.LUCKY:
 			dc = 2
 			_effect_msg = "Florida Sunshine!  +2 Coins!"
@@ -277,10 +459,10 @@ func _apply_space_effect(player_id: int, space_type: int) -> void:
 			dc = -2
 			_effect_msg = "Gator Attack!  -2 Coins!"
 		SpaceType.BONUS:
-			dc = randi_range(2, 4)
+			dc = _rng.randi_range(2, 4)
 			_effect_msg = "Florida Man SCORES!  +%d Coins!" % dc
 		SpaceType.PENALTY:
-			dc = -randi_range(1, 3)
+			dc = -_rng.randi_range(1, 3)
 			_effect_msg = "DUI Checkpoint!  %d Coins!" % dc
 	if dc != 0:
 		GameSession.add_board_coins(player_id, dc)
@@ -316,14 +498,15 @@ func _get_token_visual_pos(player_id: int) -> Vector2:
 			var sp_b: Dictionary = _spaces[_hop_to_idx]
 			var pa: Vector2 = sp_a["pos"]
 			var pb: Vector2 = sp_b["pos"]
-			return pa.lerp(pb, _hop_progress)
+			# Arc the hop slightly upward for a bounce feel
+			var t: float = _hop_progress
+			var arc: float = sin(t * PI) * -14.0
+			return pa.lerp(pb, t) + Vector2(0, arc)
 	var idx: int        = GameSession.board_positions.get(player_id, 0)
 	var sp:  Dictionary = _spaces[idx]
-	var pos: Vector2    = sp["pos"]
-	return pos
+	return sp["pos"]
 
 func _token_offset(player_id: int) -> Vector2:
-	# Offset tokens so they don't overlap when sharing a space.
 	var pid_pos: int    = GameSession.board_positions.get(player_id, 0)
 	var same:    Array  = []
 	for op in _player_order:
@@ -370,41 +553,49 @@ func _draw() -> void:
 	var cx:   float   = vp.x * 0.5
 	var cy:   float   = vp.y * 0.5
 
-	# Background
-	draw_rect(Rect2(Vector2.ZERO, vp), Color(0.04, 0.16, 0.04))
+	# Subtle dark green tint over 3D backdrop — not solid so 3D shows through
+	draw_rect(Rect2(Vector2.ZERO, vp), Color(0.0, 0.07, 0.02, 0.26))
 
-	# Inner board area
+	# Inner board area — semi-transparent so 3D landscape is visible at edges
 	var itl: Vector2 = Vector2(MARGIN + SPACE_SZ + 4.0, MARGIN + SPACE_SZ + 4.0)
 	var isz: Vector2 = vp - itl * 2.0
-	draw_rect(Rect2(itl, isz), Color(0.07, 0.22, 0.07))
-	draw_rect(Rect2(itl, isz), Color(0.15, 0.50, 0.15, 0.35), false, 2.0)
+	draw_rect(Rect2(itl, isz), Color(0.04, 0.16, 0.04, 0.80))
 
-	# Center board info
+	# Animated border glow on inner board
+	var t_border: float = fmod(Time.get_ticks_msec() * 0.0014, TAU)
+	draw_rect(Rect2(itl, isz), Color(0.22, 0.68, 0.18, 0.28 + 0.14 * sin(t_border)), false, 3.0)
+
+	# Center labels
 	draw_string(font, Vector2(cx, cy - 52.0), "FLORIDA MEN",
-		HORIZONTAL_ALIGNMENT_CENTER, 260.0, 30, Color(0.50, 1.00, 0.28))
-	draw_string(font, Vector2(cx, cy - 16.0), "Round %d / %d" % [GameSession.round_number + 1, GameSession.ROUNDS_PER_MATCH],
-		HORIZONTAL_ALIGNMENT_CENTER, 260.0, 18, Color(0.78, 0.92, 0.65))
+		HORIZONTAL_ALIGNMENT_CENTER, 280.0, 32, Color(0.52, 1.00, 0.28))
+	draw_string(font, Vector2(cx, cy - 16.0),
+		"Round %d / %d" % [GameSession.round_number + 1, GameSession.ROUNDS_PER_MATCH],
+		HORIZONTAL_ALIGNMENT_CENTER, 280.0, 18, Color(0.78, 0.92, 0.65))
 	_draw_legend(font, cx, cy)
 
-	# Path connections
+	# Path connections (thicker, slightly glowing)
 	for i: int in SPACE_COUNT:
 		var sp_a: Dictionary = _spaces[i]
 		var sp_b: Dictionary = _spaces[(i + 1) % SPACE_COUNT]
 		var pa:   Vector2    = sp_a["pos"]
 		var pb:   Vector2    = sp_b["pos"]
+		var mid:  Vector2    = (pa + pb) * 0.5 + Vector2(SPACE_SZ * 0.5, SPACE_SZ * 0.5)
 		draw_line(pa + Vector2(SPACE_SZ * 0.5, SPACE_SZ * 0.5),
 		          pb + Vector2(SPACE_SZ * 0.5, SPACE_SZ * 0.5),
-		          Color(0.30, 0.48, 0.30, 0.65), 3.0)
+		          Color(0.38, 0.58, 0.35, 0.75), 4.0)
 
-	# Current-player space pulse
-	if _state == TurnState.WAITING_FOR_ROLL or _state == TurnState.ROLLING:
+	# Active-player space pulse rings
+	if not _player_order.is_empty() and \
+			(_state == TurnState.WAITING_FOR_ROLL or _state == TurnState.ROLLING):
 		var pid: int        = _player_order[_turn_idx]
 		var idx: int        = GameSession.board_positions.get(pid, 0)
 		var sp:  Dictionary = _spaces[idx]
 		var pos: Vector2    = sp["pos"]
 		var t:   float      = fmod(Time.get_ticks_msec() * 0.003, TAU)
-		draw_rect(Rect2(pos - Vector2(3.0, 3.0), Vector2(SPACE_SZ + 6.0, SPACE_SZ + 6.0)),
-			Color(1.0, 1.0, 0.25, 0.38 + 0.35 * sin(t)), false, 3.5)
+		draw_rect(Rect2(pos - Vector2(4.0, 4.0), Vector2(SPACE_SZ + 8.0, SPACE_SZ + 8.0)),
+			Color(1.0, 1.0, 0.22, 0.45 + 0.30 * sin(t)), false, 4.0)
+		draw_rect(Rect2(pos - Vector2(9.0, 9.0), Vector2(SPACE_SZ + 18.0, SPACE_SZ + 18.0)),
+			Color(1.0, 1.0, 0.22, 0.18 + 0.14 * sin(t + 1.0)), false, 2.5)
 
 	# Spaces
 	for i: int in SPACE_COUNT:
@@ -414,13 +605,31 @@ func _draw() -> void:
 		var col:   Color      = SPACE_COL[stype]
 		var r:     Rect2      = Rect2(pos, Vector2(SPACE_SZ, SPACE_SZ))
 
-		draw_rect(Rect2(pos + Vector2(3.0, 3.0), Vector2(SPACE_SZ, SPACE_SZ)), Color(0.0, 0.0, 0.0, 0.42))
+		# Drop shadow
+		draw_rect(Rect2(pos + Vector2(4.0, 4.0), Vector2(SPACE_SZ, SPACE_SZ)), Color(0.0, 0.0, 0.0, 0.50))
+		# Main tile
 		draw_rect(r, col)
-		draw_rect(r, col.darkened(0.38), false, 2.0)
-		draw_string(font, Vector2(pos.x, pos.y + SPACE_SZ * 0.58 + 5.0),
+		# Top/left highlight edges
+		draw_line(pos, pos + Vector2(SPACE_SZ - 1.0, 0.0), Color(1.0, 1.0, 1.0, 0.30), 1.5)
+		draw_line(pos, pos + Vector2(0.0, SPACE_SZ - 1.0), Color(1.0, 1.0, 1.0, 0.22), 1.5)
+		# Border
+		draw_rect(r, col.darkened(0.35), false, 2.0)
+		# Icon
+		draw_string(font, Vector2(pos.x, pos.y + SPACE_SZ * 0.60 + 5.0),
 			SPACE_ICON[stype], HORIZONTAL_ALIGNMENT_CENTER, SPACE_SZ, 20, Color.WHITE)
+		# Number
 		draw_string(font, Vector2(pos.x + 3.0, pos.y + 12.0),
-			str(i), HORIZONTAL_ALIGNMENT_LEFT, SPACE_SZ, 10, Color(1.0, 1.0, 1.0, 0.62))
+			str(i), HORIZONTAL_ALIGNMENT_LEFT, SPACE_SZ, 10, Color(1.0, 1.0, 1.0, 0.60))
+
+		# Animated glow for special spaces
+		if stype == SpaceType.LUCKY or stype == SpaceType.BONUS or stype == SpaceType.START:
+			var t: float = fmod(Time.get_ticks_msec() * 0.0030, TAU)
+			draw_rect(Rect2(pos - Vector2(2.5, 2.5), Vector2(SPACE_SZ + 5.0, SPACE_SZ + 5.0)),
+					Color(1.0, 0.92, 0.20, 0.20 + 0.15 * sin(t)), false, 3.0)
+		elif stype == SpaceType.UNLUCKY or stype == SpaceType.PENALTY:
+			var t: float = fmod(Time.get_ticks_msec() * 0.0038, TAU)
+			draw_rect(Rect2(pos - Vector2(2.5, 2.5), Vector2(SPACE_SZ + 5.0, SPACE_SZ + 5.0)),
+					Color(1.0, 0.15, 0.10, 0.16 + 0.12 * sin(t)), false, 3.0)
 
 	# Player tokens
 	for p: Dictionary in GameSession.players:
@@ -430,51 +639,76 @@ func _draw() -> void:
 		var offset: Vector2 = _token_offset(pid)
 		var center: Vector2 = vpos + Vector2(SPACE_SZ * 0.5, SPACE_SZ * 0.5) + offset
 
-		draw_circle(center + Vector2(2.0, 2.0), 14.0, Color(0.0, 0.0, 0.0, 0.44))
-		draw_circle(center, 14.0, pcol.darkened(0.22))
-		draw_circle(center, 11.0, pcol)
-		draw_arc(center, 11.5, 0.0, TAU, 20, Color(1.0, 1.0, 1.0, 0.55), 1.5)
+		# Shadow
+		draw_circle(center + Vector2(3.0, 3.0), 15.0, Color(0.0, 0.0, 0.0, 0.46))
+		# Outer rim
+		draw_circle(center, 15.0, pcol.darkened(0.28))
+		# Body
+		draw_circle(center, 12.0, pcol)
+		# Shine
+		draw_circle(center + Vector2(-4.0, -4.0), 4.5, Color(1.0, 1.0, 1.0, 0.30))
+		# Ring
+		draw_arc(center, 12.5, 0.0, TAU, 24, Color(1.0, 1.0, 1.0, 0.58), 1.5)
+		# Player number
 		draw_string(font, Vector2(center.x, center.y + 5.0),
-			str(pid + 1), HORIZONTAL_ALIGNMENT_CENTER, 28.0, 13, Color.WHITE)
+			str(pid + 1), HORIZONTAL_ALIGNMENT_CENTER, 30.0, 14, Color.WHITE)
+
+		# Active player pulse rings
+		if (_state == TurnState.WAITING_FOR_ROLL or _state == TurnState.ROLLING) \
+				and pid == _player_order[_turn_idx]:
+			var t: float = fmod(Time.get_ticks_msec() * 0.005, TAU)
+			draw_arc(center, 18.5, 0.0, TAU, 32, Color(1.0, 0.92, 0.18, 0.68 + 0.28 * sin(t)), 2.5)
+			draw_arc(center, 22.5, 0.0, TAU, 32, Color(1.0, 0.92, 0.18, 0.28 + 0.18 * sin(t + 1.1)), 1.5)
 
 	_draw_dice(vp, font)
 
 func _draw_legend(font: Font, cx: float, cy: float) -> void:
-	var types: Array = [SpaceType.LUCKY, SpaceType.UNLUCKY, SpaceType.BONUS, SpaceType.PENALTY, SpaceType.START]
+	var types: Array  = [SpaceType.LUCKY, SpaceType.UNLUCKY, SpaceType.BONUS, SpaceType.PENALTY, SpaceType.START]
 	var labels: Array = ["Lucky +$", "Unlucky -$", "Bonus +$$", "Penalty -$", "GO +3"]
-	var leg_y: float = cy + 28.0
-	var leg_x: float = cx - (types.size() - 1) * 40.0
+	var leg_y: float  = cy + 28.0
+	var leg_x: float  = cx - (types.size() - 1) * 40.0
 	for i: int in types.size():
 		var col: Color = SPACE_COL[types[i]]
 		draw_rect(Rect2(Vector2(leg_x + i * 80.0 - 10.0, leg_y - 10.0), Vector2(20.0, 20.0)), col)
+		draw_rect(Rect2(Vector2(leg_x + i * 80.0 - 11.0, leg_y - 11.0), Vector2(22.0, 22.0)),
+				col.darkened(0.35), false, 1.5)
 		draw_string(font, Vector2(leg_x + i * 80.0, leg_y + 16.0),
 			labels[i], HORIZONTAL_ALIGNMENT_CENTER, 80.0, 11, Color(0.82, 0.92, 0.72))
 
 func _draw_dice(vp: Vector2, font: Font) -> void:
 	if not _dice_rolled or _state == TurnState.WAITING_FOR_ROLL:
 		return
+
 	var dsize: float   = 90.0
 	var dcx:   float   = vp.x * 0.5
-	# Sit above center so the effect label (at ~45% height) doesn't overlap
 	var dcy:   float   = vp.y * 0.33
 	var dtl:   Vector2 = Vector2(dcx - dsize * 0.5, dcy - dsize * 0.5)
 	var dr:    Rect2   = Rect2(dtl, Vector2(dsize, dsize))
 
-	# Rolling glow
+	# Rolling glow burst
 	if _state == TurnState.ROLLING:
-		var t: float = fmod(Time.get_ticks_msec() * 0.008, TAU)
-		draw_rect(Rect2(dtl - Vector2(4.0, 4.0), Vector2(dsize + 8.0, dsize + 8.0)),
-			Color(1.0, 0.9, 0.2, 0.4 + 0.3 * sin(t)))
+		var t: float = fmod(Time.get_ticks_msec() * 0.010, TAU)
+		var g: float = 10.0 + 5.0 * sin(t)
+		draw_rect(Rect2(dtl - Vector2(g, g), Vector2(dsize + g * 2.0, dsize + g * 2.0)),
+			Color(1.0, 0.85, 0.10, 0.38 + 0.26 * sin(t)))
 
-	draw_rect(Rect2(dtl + Vector2(4.0, 4.0), Vector2(dsize, dsize)), Color(0.0, 0.0, 0.0, 0.38))
-	draw_rect(dr, Color(0.96, 0.96, 0.94))
-	draw_rect(dr, Color(0.22, 0.22, 0.22), false, 2.5)
+	# 3D-look die: shadow + side panels + face
+	draw_rect(Rect2(dtl + Vector2(6.0, 6.0), Vector2(dsize, dsize)), Color(0.0, 0.0, 0.0, 0.45))
+	draw_rect(Rect2(dtl + Vector2(dsize, 4.0), Vector2(6.0, dsize)), Color(0.50, 0.50, 0.48))
+	draw_rect(Rect2(dtl + Vector2(4.0, dsize), Vector2(dsize + 2.0, 6.0)), Color(0.46, 0.46, 0.44))
+	draw_rect(dr, Color(0.97, 0.97, 0.95))
+	# Face highlights
+	draw_line(dtl, dtl + Vector2(dsize, 0.0), Color(1.0, 1.0, 1.0, 0.75), 2.0)
+	draw_line(dtl, dtl + Vector2(0.0, dsize), Color(1.0, 1.0, 1.0, 0.55), 2.0)
+	# Border
+	draw_rect(dr, Color(0.18, 0.18, 0.18), false, 2.0)
 
+	# Pips with drop shadow
 	var pips: Array[Vector2] = _pip_positions(_dice_value, Vector2(dcx, dcy), dsize * 0.27)
 	for pip: Vector2 in pips:
-		draw_circle(pip, 6.5, Color(0.10, 0.10, 0.10))
+		draw_circle(pip + Vector2(1.0, 1.0), 6.5, Color(0.0, 0.0, 0.0, 0.28))
+		draw_circle(pip, 6.5, Color(0.08, 0.08, 0.08))
 
-	# Rolled value label below die
-	draw_string(font, Vector2(dcx, dcy + dsize * 0.5 + 20.0),
+	draw_string(font, Vector2(dcx, dcy + dsize * 0.5 + 22.0),
 		"Rolled: %d" % _dice_value, HORIZONTAL_ALIGNMENT_CENTER, 120.0, 15,
-		Color(0.9, 0.9, 0.7))
+		Color(0.92, 0.90, 0.70))

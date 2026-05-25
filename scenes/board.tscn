@@ -10,3 +10,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_board")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+show_behind_parent = true
+stretch = true
+mouse_filter = 2
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+own_world_3d = true
+size = Vector2i(1280, 720)
+render_target_update_mode = 4
+
+[node name="LandingParticles" type="CPUParticles2D" parent="."]
+emitting = false
+z_index = 10

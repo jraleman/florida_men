@@ -2,8 +2,8 @@ extends Control
 
 @onready var round_label: Label = $VBoxContainer/RoundLabel
 @onready var standings_label: Label = $VBoxContainer/StandingsLabel
-@onready var game_name_label: Label = $VBoxContainer/GameNameLabel
-@onready var rules_label: Label = $VBoxContainer/RulesLabel
+@onready var game_name_label: Label = $VBoxContainer/GamePanel/GameVBox/GameNameLabel
+@onready var rules_label: Label = $VBoxContainer/GamePanel/GameVBox/RulesLabel
 @onready var countdown_label: Label = $VBoxContainer/CountdownLabel
 
 var _countdown: float = 3.0

@@ -3,17 +3,17 @@ extends Control
 @onready var start_button: Button = $VBoxContainer/StartButton
 
 const SLOT_STATUS_PATHS := [
-	"VBoxContainer/PlayerSlots/Slot1/SlotStatus",
-	"VBoxContainer/PlayerSlots/Slot2/SlotStatus",
-	"VBoxContainer/PlayerSlots/Slot3/SlotStatus",
-	"VBoxContainer/PlayerSlots/Slot4/SlotStatus",
+	"VBoxContainer/PlayerSlots/Slot1/Inner/SlotStatus",
+	"VBoxContainer/PlayerSlots/Slot2/Inner/SlotStatus",
+	"VBoxContainer/PlayerSlots/Slot3/Inner/SlotStatus",
+	"VBoxContainer/PlayerSlots/Slot4/Inner/SlotStatus",
 ]
 
 const TOGGLE_BUTTON_PATHS := [
-	"VBoxContainer/PlayerSlots/Slot1/ToggleButton",
-	"VBoxContainer/PlayerSlots/Slot2/ToggleButton",
-	"VBoxContainer/PlayerSlots/Slot3/ToggleButton",
-	"VBoxContainer/PlayerSlots/Slot4/ToggleButton",
+	"VBoxContainer/PlayerSlots/Slot1/Inner/ToggleButton",
+	"VBoxContainer/PlayerSlots/Slot2/Inner/ToggleButton",
+	"VBoxContainer/PlayerSlots/Slot3/Inner/ToggleButton",
+	"VBoxContainer/PlayerSlots/Slot4/Inner/ToggleButton",
 ]
 
 var _status_labels: Array = []

@@ -1,8 +1,8 @@
 extends Control
 
-@onready var play_button: Button = $VBoxContainer/PlayButton
-@onready var input_settings_button: Button = $VBoxContainer/InputSettingsButton
-@onready var quit_button: Button = $VBoxContainer/QuitButton
+@onready var play_button: Button = $Center/Panel/VBoxContainer/PlayButton
+@onready var input_settings_button: Button = $Center/Panel/VBoxContainer/InputSettingsButton
+@onready var quit_button: Button = $Center/Panel/VBoxContainer/QuitButton
 
 func _ready() -> void:
 	GameSession.clear_session()

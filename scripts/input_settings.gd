@@ -1,6 +1,6 @@
 extends Control
 
-@onready var bindings_grid: GridContainer = $VBoxContainer/BindingsGrid
+@onready var bindings_grid: GridContainer = $VBoxContainer/GridPanel/BindingsGrid
 @onready var save_button: Button = $VBoxContainer/BottomRow/SaveButton
 @onready var reset_button: Button = $VBoxContainer/BottomRow/ResetButton
 @onready var back_button: Button = $VBoxContainer/BottomRow/BackButton
