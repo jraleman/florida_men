@@ -23,7 +23,7 @@ var _grid_origin: Vector2
 const DIRS := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 func setup() -> void:
-	time_limit = 60.0
+	time_limit = 30.0
 	show_hud_scores()
 	var players := get_players()
 	var corners := [

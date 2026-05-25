@@ -3,7 +3,7 @@ extends Control
 
 signal game_over(results: Array)
 
-@export var time_limit: float = 60.0
+@export var time_limit: float = 30.0
 
 var _timer: float = 0.0
 var _running: bool = false

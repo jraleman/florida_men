@@ -9,7 +9,7 @@ extends Control
 var _countdown: float = 3.0
 
 func _ready() -> void:
-	round_label.text = "Round %d / %d" % [GameSession.round_number + 1, GameSession.ROUNDS_PER_MATCH]
+	round_label.text = "Round %d / %d" % [GameSession.round_number + 1, GameSession.rounds_per_match]
 	game_name_label.text = GameSession.get_current_mini_game_name()
 	rules_label.text = "\n".join(GameSession.get_current_mini_game_rules())
 	# Only show standings from round 2 onward — nothing to show before the first round

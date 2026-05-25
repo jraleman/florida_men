@@ -1,8 +1,11 @@
 extends Node
 
 const MAX_PLAYERS := 4
-const ROUNDS_PER_MATCH := 6
 const PLACEMENT_POINTS := [3, 2, 1, 0]
+const MINI_GAME_COINS  := [5, 3, 1, 0]  # coins awarded per mini-game placement
+const STARTING_COINS   := 10
+
+var rounds_per_match: int = 10
 
 const MINI_GAMES := [
 	"res://scenes/mini_games/alligator_wrangler.tscn",
@@ -72,6 +75,7 @@ var mini_game_order: Array = []
 var _mini_game_index: int = 0
 var last_round_winner_id: int = -1
 var last_round_points: Dictionary = {}
+var last_round_coins: Dictionary = {}
 # Each entry: {game_name, placements: {player_id->int}, points: {player_id->int}}
 var round_history: Array = []
 
@@ -163,6 +167,7 @@ func clear_session() -> void:
 	mini_game_order.clear()
 	last_round_winner_id = -1
 	last_round_points.clear()
+	last_round_coins.clear()
 	round_history.clear()
 	board_positions.clear()
 	board_coins.clear()
@@ -172,7 +177,7 @@ func init_board() -> void:
 	board_coins.clear()
 	for p in players:
 		board_positions[p.id] = 0
-		board_coins[p.id] = 0
+		board_coins[p.id] = STARTING_COINS
 
 func add_board_coins(player_id: int, amount: int) -> void:
 	var current: int = board_coins.get(player_id, 0)
@@ -185,6 +190,7 @@ func start_match() -> void:
 	mini_game_order.shuffle()
 	last_round_winner_id = -1
 	last_round_points.clear()
+	last_round_coins.clear()
 	round_history.clear()
 	for p in players:
 		scores[p.id] = 0
@@ -197,6 +203,7 @@ func rematch() -> void:
 	mini_game_order.shuffle()
 	last_round_winner_id = -1
 	last_round_points.clear()
+	last_round_coins.clear()
 	round_history.clear()
 	for p in players:
 		scores[p.id] = 0
@@ -218,13 +225,18 @@ func get_current_mini_game_rules() -> Array:
 
 func apply_results(results: Array) -> void:
 	last_round_points.clear()
+	last_round_coins.clear()
 	last_round_winner_id = -1
 	var history_placements: Dictionary = {}
 	var history_points: Dictionary = {}
 	for entry in results:
-		var pts: int = PLACEMENT_POINTS[mini(entry.placement, PLACEMENT_POINTS.size() - 1)]
+		var placement: int = mini(entry.placement, PLACEMENT_POINTS.size() - 1)
+		var pts: int = PLACEMENT_POINTS[placement]
+		var coins: int = MINI_GAME_COINS[placement]
 		last_round_points[entry.player_id] = pts
+		last_round_coins[entry.player_id] = coins
 		scores[entry.player_id] += pts
+		add_board_coins(entry.player_id, coins)
 		history_placements[entry.player_id] = entry.placement
 		history_points[entry.player_id] = pts
 		if entry.placement == 0:
@@ -238,7 +250,7 @@ func apply_results(results: Array) -> void:
 	round_number += 1
 
 func is_match_over() -> bool:
-	return round_number >= ROUNDS_PER_MATCH
+	return round_number >= rounds_per_match
 
 func get_sorted_scores() -> Array:
 	var result := []
@@ -247,10 +259,16 @@ func get_sorted_scores() -> Array:
 		for round_data in round_history:
 			if round_data.placements.get(p.id, 99) == 0:
 				wins += 1
-		result.append({"id": p.id, "name": p.name, "score": scores.get(p.id, 0), "wins": wins})
+		result.append({
+			"id": p.id,
+			"name": p.name,
+			"score": scores.get(p.id, 0),
+			"wins": wins,
+			"coins": board_coins.get(p.id, 0),
+		})
 	result.sort_custom(func(a, b):
-		if a.score != b.score:
-			return a.score > b.score
+		if a.coins != b.coins:
+			return a.coins > b.coins
 		return a.wins > b.wins
 	)
 	return result
@@ -259,7 +277,7 @@ func get_standings_text() -> String:
 	var sorted := get_sorted_scores()
 	var parts := []
 	for i in sorted.size():
-		parts.append("%s %dpts" % [sorted[i].name, sorted[i].score])
+		parts.append("%s %d coins" % [sorted[i].name, sorted[i].coins])
 	return "  >  ".join(PackedStringArray(parts))
 
 func get_last_round_winner_name() -> String:

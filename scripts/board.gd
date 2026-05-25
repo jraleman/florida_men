@@ -306,7 +306,7 @@ func _build_3d_center_sign() -> void:
 	_center_sign.add_child(title_lbl)
 
 	_round_lbl_3d = Label3D.new()
-	_round_lbl_3d.text = "Round 1 / %d" % GameSession.ROUNDS_PER_MATCH
+	_round_lbl_3d.text = "Round 1 / %d" % GameSession.rounds_per_match
 	_round_lbl_3d.position = Vector3(0, -0.30, 0)
 	_round_lbl_3d.pixel_size = 0.006
 	_round_lbl_3d.font_size = 40
@@ -648,7 +648,7 @@ func _process(delta: float) -> void:
 			_sign_panel.look_at(look_pos, Vector3.UP)
 
 	if _round_lbl_3d != null:
-		_round_lbl_3d.text = "Round %d / %d" % [GameSession.round_number + 1, GameSession.ROUNDS_PER_MATCH]
+		_round_lbl_3d.text = "Round %d / %d" % [GameSession.round_number + 1, GameSession.rounds_per_match]
 
 	# Pulse the active/destination tile
 	if _space_mats.size() == SPACE_COUNT and not _player_order.is_empty():

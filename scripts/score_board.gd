@@ -187,9 +187,9 @@ func _populate_scores(match_over: bool) -> void:
 			display_rank = i
 		prev_score = entry.score
 
-		var pts_earned: int = GameSession.last_round_points.get(entry.id, 0)
+		var coins_earned: int = GameSession.last_round_coins.get(entry.id, 0)
 		var placement: String = PLACEMENT_LABELS[mini(display_rank, PLACEMENT_LABELS.size() - 1)]
-		var tied: bool = i > 0 and sorted[i - 1].score == entry.score
+		var tied: bool = i > 0 and sorted[i - 1].coins == entry.coins
 		var tie_tag := " (tied)" if tied else ""
 		var winner_tag := "  ★ MATCH WINNER" if (display_rank == 0 and match_over) else ""
 		var rank_idx: int = mini(display_rank, RANK_BG_COLORS.size() - 1)
@@ -234,12 +234,12 @@ func _populate_scores(match_over: bool) -> void:
 
 		var main_label := Label.new()
 		if match_over:
-			main_label.text = "%s  %s%s  —  %d pts  (%d wins)%s" % [
-				placement, entry.name, tie_tag, entry.score, entry.wins, winner_tag
+			main_label.text = "%s  %s%s  —  %d coins  (%d wins)%s" % [
+				placement, entry.name, tie_tag, entry.coins, entry.wins, winner_tag
 			]
 		else:
-			main_label.text = "%s  %s  +%d pts  (total: %d)" % [
-				placement, entry.name, pts_earned, entry.score
+			main_label.text = "%s  %s  +%d coins  (total: %d)" % [
+				placement, entry.name, coins_earned, entry.coins
 			]
 		main_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		main_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))

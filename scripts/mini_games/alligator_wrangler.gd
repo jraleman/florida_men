@@ -18,7 +18,7 @@ var _finish_order: Array = []
 var _grid_origin: Vector2
 
 func setup() -> void:
-	time_limit = 60.0
+	time_limit = 30.0
 	show_hud_scores()
 	var players := get_players()
 	for i in players.size():
@@ -75,9 +75,13 @@ func _check_wrangles() -> void:
 			_move_gator()
 			if wrangle_counts[pid] >= WRANGLES_TO_WIN:
 				_finish_order.append(pid)
-				if _finish_order.size() >= get_players().size():
-					end_game(build_results_from_order(_finish_order))
-					return
+				var remaining: Array = []
+				for p2 in get_players():
+					if p2.id not in _finish_order:
+						remaining.append(p2.id)
+				remaining.sort_custom(func(a, b): return wrangle_counts.get(a, 0) > wrangle_counts.get(b, 0))
+				end_game(build_results_from_order(_finish_order + remaining))
+				return
 
 func on_timeout() -> void:
 	var remaining := []

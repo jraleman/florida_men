@@ -19,7 +19,7 @@ var player_obstacles: Dictionary = {}  # player_id -> Array[{progress, lane, hit
 var _finish_order: Array = []
 
 func setup() -> void:
-	time_limit = 90.0
+	time_limit = 30.0
 	for p in get_players():
 		var pid: int = p.id
 		player_progress[pid] = 0.0
@@ -64,9 +64,13 @@ func _advance_players(delta: float) -> void:
 		player_progress[pid] = prog
 		if prog >= TRACK_LENGTH:
 			_finish_order.append(pid)
-			if _finish_order.size() >= get_players().size():
-				end_game(build_results_from_order(_finish_order))
-				return
+			var remaining: Array = []
+			for p2 in get_players():
+				if p2.id not in _finish_order:
+					remaining.append(p2.id)
+			remaining.sort_custom(func(a, b): return player_progress.get(a, 0.0) > player_progress.get(b, 0.0))
+			end_game(build_results_from_order(_finish_order + remaining))
+			return
 
 func _check_collisions() -> void:
 	for p in get_players():

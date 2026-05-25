@@ -17,7 +17,7 @@ var _objects: Array = []  # {x, y, good}
 var _spawn_timer: float = 0.0
 
 func setup() -> void:
-	time_limit = 45.0
+	time_limit = 30.0
 	show_hud_scores()
 	var vp := get_viewport_rect().size
 	var players := get_players()

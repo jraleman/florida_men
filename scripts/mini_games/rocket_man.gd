@@ -20,7 +20,7 @@ var _eliminated_order: Array = []
 var _walls: Array = []  # {x, gap_y}
 
 func setup() -> void:
-	time_limit = 60.0
+	time_limit = 30.0
 	var vp := get_viewport_rect().size
 	var players := get_players()
 	var y_start := vp.y / 2.0
@@ -82,10 +82,14 @@ func _eliminate(pid: int) -> void:
 	for p in get_players():
 		if player_alive.get(p.id, false):
 			alive_count += 1
-	if alive_count == 0:
+	if alive_count <= 1:
+		var survivors: Array = []
+		for p in get_players():
+			if player_alive.get(p.id, false):
+				survivors.append(p.id)
 		var rev := _eliminated_order.duplicate()
 		rev.reverse()
-		end_game(build_results_from_order(rev))
+		end_game(build_results_from_order(survivors + rev))
 
 func _update_walls(delta: float) -> void:
 	var vp := get_viewport_rect().size
