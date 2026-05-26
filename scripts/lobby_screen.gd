@@ -31,6 +31,7 @@ func _ready() -> void:
 		_toggle_buttons.append(btn)
 		btn.pressed.connect(_on_toggle_pressed.bind(i))
 	start_button.pressed.connect(_on_start_pressed)
+	MusicManager.play_music("menu")
 	GameSession.add_player(0)
 	for i in range(1, GameSession.MAX_PLAYERS):
 		GameSession.add_ai_player(i)
@@ -42,6 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		GameSession.go_to("res://scenes/main_menu.tscn")
 
 func _on_toggle_pressed(player_id: int) -> void:
+	SoundManager.play("ui_click")
 	var currently_ai := GameSession.is_ai_player(player_id)
 	GameSession.set_ai_player(player_id, not currently_ai)
 	_refresh_slots()
@@ -56,6 +58,7 @@ func _refresh_slots() -> void:
 			(_toggle_buttons[i] as Button).text = "Switch to AI"
 
 func _on_start_pressed() -> void:
+	SoundManager.play("game_start")
 	GameSession.start_match()
 	GameSession.go_to("res://scenes/board.tscn")
 
@@ -106,6 +109,7 @@ func _build_rounds_row() -> void:
 	_refresh_round_buttons()
 
 func _on_rounds_pressed(n: int) -> void:
+	SoundManager.play("ui_click")
 	GameSession.rounds_per_match = n
 	_refresh_round_buttons()
 

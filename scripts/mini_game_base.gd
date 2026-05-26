@@ -28,6 +28,8 @@ func setup() -> void:
 func start() -> void:
 	_timer = time_limit
 	_running = true
+	MusicManager.play_music("minigame")
+	SoundManager.play("game_start")
 
 func on_tick(_delta: float) -> void:
 	pass
@@ -51,6 +53,7 @@ func _process(delta: float) -> void:
 
 func end_game(results: Array) -> void:
 	_running = false
+	SoundManager.play("game_over")
 	game_over.emit(results)
 
 func _on_game_over(results: Array) -> void:
@@ -66,6 +69,7 @@ func _initialize_player_scores() -> void:
 
 func add_score(player_id: int, amount: int = 1) -> void:
 	_player_scores[player_id] = _player_scores.get(player_id, 0) + amount
+	SoundManager.play("score_point")
 	_update_hud_scores()
 
 func get_score(player_id: int) -> int:

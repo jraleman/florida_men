@@ -24,3 +24,5 @@ config/features=PackedStringArray("4.6", "GL Compatibility")
 
 GameSession="*res://scripts/autoload/game_session.gd"
 AIController="*res://scripts/autoload/ai_controller.gd"
+SoundManager="*res://scripts/autoload/sound_manager.gd"
+MusicManager="*res://scripts/autoload/music_manager.gd"

@@ -110,6 +110,7 @@ var _effect_popup_lbl: Label3D = null
 func _ready() -> void:
 	_rng = RandomNumberGenerator.new()
 	_rng.randomize()
+	MusicManager.play_music("board")
 	_setup_3d_scene()
 	_build_3d_center_sign()
 	_init_space_positions_3d()
@@ -719,6 +720,7 @@ func _do_roll() -> void:
 	_dice_cycle  = 0.0
 	_dice_rolled = true
 	_state       = TurnState.ROLLING
+	SoundManager.play("dice_roll")
 
 func _proc_rolling(delta: float) -> void:
 	_dice_timer += delta
@@ -749,6 +751,7 @@ func _proc_moving(delta: float) -> void:
 		var pid: int  = _player_order[_turn_idx]
 		GameSession.board_positions[pid] = _hop_to_idx
 		_hops_done += 1
+		SoundManager.play("hop")
 
 		if _hops_done >= _spaces_to_move:
 			var sp:    Dictionary = _spaces[_hop_to_idx]
@@ -820,6 +823,7 @@ func _apply_space_effect(player_id: int, space_type: int) -> void:
 		SpaceType.START:
 			dc = 3
 			_effect_msg = "Back at GO!  +3 Coins!"
+			SoundManager.play("start_space")
 		SpaceType.NORMAL:
 			var opts: Array = [
 				"Just another day in Florida...",
@@ -827,18 +831,23 @@ func _apply_space_effect(player_id: int, space_type: int) -> void:
 				"Someone nearby ate a tide pod.",
 			]
 			_effect_msg = opts[_rng.randi() % opts.size()]
+			SoundManager.play("normal")
 		SpaceType.LUCKY:
 			dc = 2
 			_effect_msg = "Florida Sunshine!  +2 Coins!"
+			SoundManager.play("lucky")
 		SpaceType.UNLUCKY:
 			dc = -2
 			_effect_msg = "Gator Attack!  -2 Coins!"
+			SoundManager.play("unlucky")
 		SpaceType.BONUS:
 			dc = _rng.randi_range(2, 4)
 			_effect_msg = "Florida Man SCORES!  +%d Coins!" % dc
+			SoundManager.play("bonus")
 		SpaceType.PENALTY:
 			dc = -_rng.randi_range(1, 3)
 			_effect_msg = "DUI Checkpoint!  %d Coins!" % dc
+			SoundManager.play("penalty")
 	if dc != 0:
 		GameSession.add_board_coins(player_id, dc)
 	_refresh_coins_lbl()

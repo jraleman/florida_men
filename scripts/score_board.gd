@@ -34,6 +34,7 @@ var _match_over := false
 func _ready() -> void:
 	rematch_button.pressed.connect(_on_rematch_pressed)
 	continue_button.pressed.connect(_on_continue_pressed)
+	MusicManager.play_music("scoreboard")
 	_setup_3d_scene()
 	_setup_confetti_particles()
 	_display_scores()
@@ -297,6 +298,7 @@ func _populate_history(match_over: bool) -> void:
 func _start_effects() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
+	SoundManager.play("fanfare")
 	_do_flash()
 	_animate_entrance()
 
@@ -362,9 +364,11 @@ func _animate_entrance() -> void:
 # ── Buttons ───────────────────────────────────────────────────────────────────
 
 func _on_rematch_pressed() -> void:
+	SoundManager.play("ui_click")
 	GameSession.rematch()
 
 func _on_continue_pressed() -> void:
+	SoundManager.play("ui_click")
 	if GameSession.is_match_over():
 		GameSession.go_to("res://scenes/main_menu.tscn")
 	else:

@@ -9,12 +9,16 @@ func _ready() -> void:
 	play_button.pressed.connect(_on_play_pressed)
 	input_settings_button.pressed.connect(_on_input_settings_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
+	MusicManager.play_music("menu")
 
 func _on_play_pressed() -> void:
+	SoundManager.play("ui_click")
 	GameSession.go_to("res://scenes/lobby_screen.tscn")
 
 func _on_input_settings_pressed() -> void:
+	SoundManager.play("ui_click")
 	GameSession.go_to("res://scenes/input_settings.tscn")
 
 func _on_quit_pressed() -> void:
+	SoundManager.play("ui_click")
 	get_tree().quit()
