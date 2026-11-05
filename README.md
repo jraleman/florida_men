@@ -1,81 +1,137 @@
-# FloridaMen
+# Florida Men
 
-Video game collection of mini-games created using Godot and some other cool stuff.
+A native `godot-base` party game: a 24-space board, six original procedural
+3D minigames and four holiday guests. Play offline with **1-4 local humans**;
+rule-aware CPUs fill the remaining seats. Mobile uses one human and three CPUs.
 
-### Step 1: Conceptualization
+Open the **parent `godot-base` project**, not this folder. The old nested
+project, duplicate autoloads and standalone menus have been removed. The shared
+framework supplies setup, settings, instructions, pause, results, achievements,
+store, gallery, saves and share images.
 
-#### Game Theme & Style:
+## Run
 
-- **Theme:** Humorous, light-hearted, with a touch of absurdity.
-- **Art Style:** Cartoonish or exaggerated, with vibrant colors to match the wacky theme.
-- **Tone:** Comedic and not taking itself too seriously.
+From `godot-base` with Godot 4.7 and the Compatibility renderer:
 
-#### Gameplay:
+```powershell
+godot --path . -- --game=florida_men
+godot --path . -- --game=all
+```
 
-- **Genre:** Party game with mini-games inspired by “Florida Man” headlines.
-- **Modes:** Multiplayer (both local and online), Single Player (against AI).
+In the collection, choose **Florida Men**, the number of humans and each
+human's holiday guest. Unclaimed seats are visibly labeled CPUs. Settings >
+Game chooses **5, 6, 10, 20 or 30 minigames** (default 10) and CPU reaction speed.
+The six-game setting visits every headline once; longer parties repeat the
+seeded rotation. Briefings and between-game standings wait for a player.
 
-#### Famous & Funny Headlines Examples for Mini-Games:
+## Rules
 
-1. **Alligator Wrangler:** “Florida Man Wrestles Alligator in a Convenience Store.”
-2. **Lawnmower Race:** “Florida Man Leads Police on Drunken Slow-Speed Chase on a Lawnmower.”
-3. **Hurricane Party:** “Florida Man Throws Hurricane Party with Mannequins.”
-4. **Rocket Man:** “Florida Man Attempts to Launch Himself into Space in a Homemade Rocket.”
-5. **Flamingo Fiasco:** “Florida Man Arrested for Fighting a Flamingo at the Zoo.”
-6. **Python Hunt:** “Florida Man Hunts Pythons in the Everglades.”
+Every guest starts with **10 board coins**. Each board round gives all four
+seats one die roll, then one minigame. Tile marks identify their effects:
+landing on GO +3, ordinary 0, Sunshine +2, Puddle -2, Bonus +2 to +4, Detour -1
+to -3. Coins cannot fall below zero. Passing GO does not pay.
 
-### Step 2: Design Documentation
+Minigame placements pay **5 / 3 / 1 / 0 coins** and **3 / 2 / 1 / 0 placement
+points**. Equal results share competition placement and its reward; a tie does
+not favor an earlier seat. After the selected number of minigames, **most
+coins wins**, with minigame wins breaking equal coin totals. Equal coins and
+wins produce shared champions. Placement points are descriptive, not another
+party tie-breaker.
 
-- **Game Design Document (GDD):** Write a comprehensive GDD detailing game mechanics, mini-games, art style, story (if any), character designs, and technical requirements.
-- **Prototype Plan:** Outline which mini-game you’ll prototype first to test the concept.
+| Minigame | Play |
+| --- | --- |
+| Alligator Wrangler | Move on the 8x8 grid onto the toy gator. First to three wrangles wins; the gator gets quicker. |
+| Lawnmower Race | Change between three lanes. Mud, chickens and chairs slow the mower; the first finisher ends the race. |
+| Hurricane Party | Move left/right, catching ribboned +1 gifts and avoiding wooden -1 debris. One guest catches each item. |
+| Rocket Man | Hold action to thrust up, release to fall. Survive cave gaps and boundaries; surviving pilots rank ahead of eliminated pilots. |
+| Flamingo Fiasco | Move into toy birds to tag them. They flee, then wander again; each bird has a short per-player tag cooldown. |
+| Python Hunt | Move on the 12x12 grid and tap action to leave an owned catch crate. A toy python entering it earns a point. |
 
-### Step 3: Godot Setup
+Minigames last at most 30 model seconds. The toy wildlife, weather and rockets
+are fictional game props, not real-world handling or safety advice.
 
-- **Install Godot:** Make sure you have the latest version installed.
-- **Project Setup:** Create a new project in Godot, selecting the appropriate templates for a party game.
-- **Asset Creation:** Start creating or sourcing assets – characters, environments, props, etc. (consider stylized or cartoonish assets to match the theme).
+All four guests appear in the shared results and statistics panels. Compact
+windows scroll the report so its controls remain reachable.
 
-### Step 4: Mini-Game Development
+## Controls
 
-- **Prototype Mini-Game:** Begin with one mini-game. For example, start with “Alligator Wrangler” where players have to wrangle an alligator in a convenience store without causing too much chaos.
-- **Gameplay Mechanics:** Define the rules, objectives, and controls for the mini-game.
-- **Scoring System:** How will players win? Time-based, points-based, etc.
+| Seat | Movement | Roll / thrust / crate |
+| --- | --- | --- |
+| P1 | W A S D | Space |
+| P2 | Arrow keys | Enter |
+| P3 | I J K L | U |
+| P4 | Number-pad 8 / 4 / 2 / 6 | Number-pad 0 |
 
-### Step 5: Character Design
+All 20 keys are rebindable through the shared Controls tab. Each assigned
+controller uses its left stick or D-pad and A. Independent on-screen direction
+and action contacts control P1 on touch devices. Escape or controller Back
+opens the shared pause menu. Inputs clear on pause, focus loss, phase changes,
+rebinding and controller reassignment. Keyboard rollover and real controller/
+multitouch behavior still need physical-device testing.
 
-- **Character Creation:** Design a customizable “Florida Man” avatar with various quirky outfits and accessories.
-- **Animation:** Ensure the character animations reflect the comedic nature of the game.
+## Souvenirs and sharing
 
-### Step 6: Level Design
+**Sunshine Tokens** are persistent shop currency, separate from board coins.
+Only a completed party pays: `min(75, 5 + floor(best_human_coins / 2))`.
+Leaving early, rolling dice and advancing individual minigames never pay.
+Hats are cosmetic; ownership is shared within the game, with four independent
+equipment slots, including CPU guests. Purchasing also wears the item in the
+first available slot, as in other framework stores.
 
-- Design levels or environments for each mini-game, keeping in mind the absurdity and humor of each scenario.
+Four achievements recognize completing a party, three human minigame wins,
+40 human board coins and a human overall champion. The free eight-exhibit
+gallery, setup previews, shop and frozen share portraits reuse actual play
+geometry. Finished shares retain all four scores, standings and outfits even
+after a later equipment change. The QR opens the studio homepage; it does not
+claim a public run record.
 
-### Step 7: UI/UX
+The shared Saves screen handles achievements, tokens and purchased/equipped
+items. An in-progress party is session-only. No online multiplayer or account
+service is implemented.
 
-- **User Interface:** Design a user-friendly and visually appealing interface.
-- **Menus:** Create menus for game modes, options, mini-game selection, etc.
+## Implementation and tests
 
-### Step 8: Playtesting & Iteration
+| Path | Responsibility |
+| --- | --- |
+| `game.gd`, `florida_men_options.gd`, `intro.tscn` | Manifest, standalone opening, rebindable controls, options, store and gallery declarations |
+| `model\party_match.gd` | Node-free dice, board effects, rotation, placements, standings and completed-party payout |
+| `model\mini_game_state.gd` | Six node-free 120 Hz simulations and rule-aware CPU steering |
+| `gameplay.gd` | `GameShell` orchestration and genuine keyboard/controller/touch input |
+| `world\` | Original reusable meshes and isolated aspect-aware Compatibility worlds |
+| `presentation\`, `audio\` | Setup/store/gallery/share adapters and original synthesized music/cues |
+| `tools\tutorial_driver.gd` | Real rebound-key walkthrough of one complete six-game party |
 
-- **Internal Testing:** Test each mini-game for bugs, balance, and fun factor.
-- **Iterate:** Based on feedback, iterate on game design, mechanics, and balance.
+From `godot-base`:
 
-### Step 9: Multiplayer Integration
+```powershell
+godot --headless --path . --script res://games/florida_men/tests/party_model_test.gd -- --game=all
+godot --headless --path . --script res://games/florida_men/tests/party_scene_test.gd -- --game=all
+godot --path . --script res://games/florida_men/tests/party_view_test.gd -- --game=all
+```
 
-- **Networking:** Implement multiplayer functionality, both local and online.
-- **Lobby System:** Design a system for players to join games and select mini-games.
+The scene suite drives all four human seats with actual keys, rebinding and
+pause, then completes all six minigames through the real shell. It restores
+the exact original store/achievement files. The view suite **requires a real
+graphics window** and checks desktop, portrait, short-landscape and ultrawide
+framing, four-seat HUDs and real rendered geometry. Run the host's 15 framework
+suites as well when changing framework integration.
 
-### Step 10: Polishing & Optimization
+Re-record only this game's silent instructions clip and poster after changing
+visuals or captions:
 
-- **Polish:** Add finishing touches to art, sound, and animations.
-- **Optimize:** Ensure the game runs smoothly on target platforms.
+```powershell
+pwsh tools\record_tutorials.ps1 -Godot 'C:\Godot\Godot.exe' -Games florida_men -Variants solo
+```
 
-### Step 11: Marketing & Release
+## Standalone builds
 
-- **Marketing Plan:** Develop a marketing strategy to promote the game’s unique concept.
-- **Launch:** Release the game on chosen platforms.
+The parent project has Windows, Web, Android and iOS presets named
+`<platform> - Florida Men (standalone)`. They select the `florida_men` feature,
+exclude other games and development tools, disable audio input and use the
+stable `DeskCanSaw Games\Florida Men` save directory. Android/iOS use adaptive
+orientation. Keep the renderer `gl_compatibility`.
 
-### Step 12: Post-Launch
-
-- **Updates:** Plan for post-launch updates and potentially new mini-games.
-- **Community Engagement:** Engage with players for feedback and ideas.
+Export templates are required. Android release signing and iOS team/
+provisioning must be configured by the release owner. Physical controllers,
+phones/tablets, browser performance, mobile signing and human gameplay/balance
+review are release checks, not established by desktop automated tests.
