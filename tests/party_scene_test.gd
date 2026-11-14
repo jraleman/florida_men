@@ -172,7 +172,8 @@ func _test_complete_party() -> void:
 	for player in 4:
 		_expect((ui[player]["result_score"] as Label).text == str(party.get("coins")[player]),
 			"Every human/CPU coin total must reach its shared result card.")
-	_expect((ui[3]["caption"] as Label).text == "CPU 4",
+	_expect((ui[3]["caption"] as Label).text == "CPU4"
+		and (ui[3]["caption"] as Label).accessibility_description == "CPU 4",
 		"The shared fourth card must describe its real controller, not claim another human.")
 	var payload: Dictionary = scene.call("_share_payload")
 	_expect(payload["score_values"] == party.get("coins")

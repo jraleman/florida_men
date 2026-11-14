@@ -39,7 +39,7 @@ static func material(color: Color) -> StandardMaterial3D:
 	if not _materials.has(color):
 		var result := StandardMaterial3D.new()
 		result.albedo_color = color
-		result.roughness = 0.82
+		result.roughness = 0.68
 		_materials[color] = result
 	return _materials[color]
 
@@ -102,17 +102,29 @@ static func crew(color: Color, hat: String, character: int) -> Node3D:
 	root.name = "HolidayGuest"
 	var skin: Color = [Color("e1ac80"), Color("a87050"), Color("edc49a"), Color("c48c64")][character % 4]
 	var hair: Color = [Color("79472d"), Color("302f34"), Color("c8944f"), Color("574d47")][character % 4]
-	box(root, Vector3(0.45, 0.52, 0.3), Vector3(0, 0.69, 0), color)
+	ball(root, Vector3(0.53, 0.62, 0.38), Vector3(0, 0.69, 0), color)
 	box(root, Vector3(0.46, 0.18, 0.32), Vector3(0, 0.38, 0), Color("314c62"))
 	for side in [-1.0, 1.0]:
 		cylinder(root, 0.085, 0.28, Vector3(side * 0.13, 0.2, 0), skin)
 		box(root, Vector3(0.18, 0.1, 0.3), Vector3(side * 0.13, 0.06, -0.04), Color("f3dfa5"))
-		cylinder(root, 0.08, 0.39, Vector3(side * 0.31, 0.65, 0), skin).rotation.z = side * 0.16
-	ball(root, Vector3(0.47, 0.5, 0.43), Vector3(0, 1.16, 0), skin)
-	ball(root, Vector3(0.48, 0.2, 0.44), Vector3(0, 1.35, 0.03), hair)
+		box(root, Vector3(0.185, 0.025, 0.31), Vector3(side * 0.13, 0.025, -0.04), Color("58666b"))
+		cylinder(root, 0.075, 0.35, Vector3(side * 0.30, 0.64, 0), skin).rotation.z = side * 0.16
+		ball(root, Vector3(0.21, 0.23, 0.30), Vector3(side * 0.25, 0.83, 0), color)
+		ball(root, Vector3(0.16, 0.17, 0.16), Vector3(side * 0.33, 0.47, 0), skin)
+	ball(root, Vector3(0.51, 0.51, 0.47), Vector3(0, 1.16, 0), skin)
+	ball(root, Vector3(0.51, 0.2, 0.47), Vector3(0, 1.35, 0.03), hair)
 	for side in [-1.0, 1.0]:
-		ball(root, Vector3(0.07, 0.08, 0.045), Vector3(side * 0.11, 1.19, -0.207), Color("23383f"))
-	box(root, Vector3(0.12, 0.025, 0.025), Vector3(0, 1.05, -0.22), Color("8c563e"))
+		ball(root, Vector3(0.085, 0.11, 0.06), Vector3(side * 0.105, 1.19, -0.22), Color("23383f"))
+		ball(root, Vector3(0.024, 0.03, 0.018),
+			Vector3(side * 0.105 + 0.012, 1.215, -0.25), Color("fff3d4"))
+		ball(root, Vector3(0.10, 0.14, 0.10), Vector3(side * 0.25, 1.15, 0), skin)
+		var collar := box(root, Vector3(0.08, 0.09, 0.03),
+			Vector3(side * 0.055, 0.92, -0.13), color.lightened(0.3))
+		collar.rotation.z = side * 0.35
+	ball(root, Vector3(0.08, 0.09, 0.08), Vector3(0, 1.12, -0.25), skin.lightened(0.06))
+	box(root, Vector3(0.13, 0.027, 0.025), Vector3(0, 1.035, -0.215), Color("8c563e"))
+	for y in [0.72, 0.84]:
+		ball(root, Vector3(0.025, 0.025, 0.018), Vector3(0, y, -0.185), Color("fff3d4"))
 	_hat(root, hat, color)
 	return root
 

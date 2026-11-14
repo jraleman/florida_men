@@ -69,6 +69,10 @@ func _player_name(player: int) -> String:
 	return "CPU %d" % (player + 1) if player >= _humans else "Player %d" % (player + 1)
 
 
+func _hud_player_is_cpu(player_index: int) -> bool:
+	return player_index >= _humans
+
+
 func _build_playfield() -> void:
 	_world = World.new()
 	_playfield.add_child(_world)
@@ -78,6 +82,11 @@ func _build_playfield() -> void:
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hud.add_child(overlay)
 	_party_panel = PanelContainer.new()
+	var panel_style := StyleBoxFlat.new()
+	panel_style.bg_color = Color("142b32", 0.18)
+	panel_style.set_content_margin_all(10)
+	panel_style.set_corner_radius_all(8)
+	_party_panel.add_theme_stylebox_override("panel", panel_style)
 	overlay.add_child(_party_panel)
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 8)
@@ -92,6 +101,7 @@ func _build_playfield() -> void:
 	_phase_body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_phase_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(_phase_body)
+	register_hud_controls(_phase_body, _layout_party, false)
 	_advance_button = Button.new()
 	_advance_button.custom_minimum_size.y = 52
 	_advance_button.pressed.connect(_on_advance_pressed)
@@ -100,6 +110,7 @@ func _build_playfield() -> void:
 	_touch.visible = DisplayServer.is_touchscreen_available()
 	_touch.connect("contact_changed", _on_touch_contact)
 	overlay.add_child(_touch)
+	register_hud_controls(_touch, _layout_party)
 	_hint.hide()
 	_build_results_layout()
 	get_viewport().size_changed.connect(_layout_party)
@@ -155,7 +166,7 @@ func _reset_round_state() -> void:
 	_frozen_hats.clear()
 	_frozen_characters.clear()
 	_clear_input()
-	_touch.visible = DisplayServer.is_touchscreen_available()
+	_sync_hud_controls()
 	_sync_scores()
 	_set_roster()
 	_world.call("show_board")
@@ -334,6 +345,8 @@ func _refresh_phase() -> void:
 				]
 			_advance_button.text = "Rolling %d..." % int(_roll["die"]) if _rolling \
 				else "CPU is choosing..." if _match.is_cpu(_match.turn) else "Roll die"
+			if not _rolling and not _match.is_cpu(_match.turn):
+				_advance_button.text = "P%d / Roll" % (_match.turn + 1)
 			_advance_button.disabled = _rolling or _match.is_cpu(_match.turn)
 			if not _rolling:
 				_world.call("sync_board", _match, {}, 1.0)
@@ -547,47 +560,34 @@ func _layout_party() -> void:
 	if _party_panel == null:
 		return
 	var screen := get_viewport_rect().size
-	var pixel_scale := maxf(1.0, screen.x / maxf(1.0, get_window().size.x))
+	var pixel_scale := _shell_hud_unit
 	if not is_equal_approx(pixel_scale, _ui_pixel_scale):
 		_ui_pixel_scale = pixel_scale
-		_phase_title.add_theme_font_size_override("font_size", maxi(28, roundi(21 * pixel_scale)))
-		_phase_body.add_theme_font_size_override("font_size", maxi(22, roundi(16 * pixel_scale)))
-		_advance_button.add_theme_font_size_override("font_size", maxi(22, roundi(17 * pixel_scale)))
-		_advance_button.custom_minimum_size.y = maxf(52, 44 * pixel_scale)
-		for player in _player_ui:
-			for field in ["caption", "score", "streak"]:
-				var sizes: Vector2i = {
-					"caption": Vector2i(18, 12), "score": Vector2i(52, 24), "streak": Vector2i(18, 10),
-				}[field]
-				(player[field] as Label).add_theme_font_size_override("font_size",
-					maxi(sizes.x, roundi(sizes.y * pixel_scale)))
-		_mode_title.add_theme_font_size_override("font_size", maxi(23, roundi(11 * pixel_scale)))
-		_time_label.add_theme_font_size_override("font_size", maxi(48, roundi(24 * pixel_scale)))
-		_time_caption.add_theme_font_size_override("font_size", maxi(15, roundi(10 * pixel_scale)))
-	var width := screen.x - 76.0 if Responsive.is_portrait(screen) else minf(1250.0, screen.x - 76.0)
+		_phase_title.add_theme_font_size_override("font_size", roundi(16 * pixel_scale))
+		_phase_body.add_theme_font_size_override("font_size", roundi(14 * pixel_scale))
+		_advance_button.add_theme_font_size_override("font_size", roundi(16 * pixel_scale))
+		_advance_button.custom_minimum_size = Vector2(144, 44) * pixel_scale
+		_advance_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_phase_body.visible = hud_controls_expanded() or _match.phase == Match.Phase.BRIEFING
+	_phase_title.visible = hud_controls_expanded() or _match.phase in [
+		Match.Phase.BRIEFING, Match.Phase.STANDINGS,
+	]
+	_advance_button.tooltip_text = "%s\n%s" % [_phase_title.text, _phase_body.text]
+	_advance_button.accessibility_description = _advance_button.tooltip_text
+	_phase_title.tooltip_text = _phase_body.text
+	_phase_title.accessibility_description = _phase_body.text
+	var width := minf(560 * pixel_scale, screen.x - 20 * pixel_scale)
 	_party_panel.size.x = width
-	var height := maxf(130.0, _party_panel.get_combined_minimum_size().y)
+	var height := _party_panel.get_combined_minimum_size().y
 	var touch_height := 135.0 * pixel_scale if _touch.visible else 0.0
-	var bottom := maxf(24.0 * pixel_scale + touch_height, _capture_inset)
+	var bottom := maxf(10.0 * pixel_scale + touch_height, _capture_inset)
 	_party_panel.position = Vector2((screen.x - width) * 0.5, screen.y - bottom - height)
 	_party_panel.size = Vector2(width, height)
 	_touch.position = Vector2(38, screen.y - touch_height - 12.0 * pixel_scale)
 	_touch.size = Vector2(screen.x - 76.0, touch_height)
-	var top_bar := _player_one_card.get_parent() as HBoxContainer
-	var margins := top_bar.get_parent().get_parent() as MarginContainer
-	var timer_card := _time_label.get_parent().get_parent() as Control
-	var available := screen.x - margins.get_theme_constant("margin_left") \
-		- margins.get_theme_constant("margin_right") - timer_card.get_combined_minimum_size().x \
-		- top_bar.get_theme_constant("separation") * (4 + int(_pause_button.visible))
-	if _pause_button.visible:
-		available -= _pause_button.get_combined_minimum_size().x
-	for player in 4:
-		(_player_ui[player]["card"] as Control).custom_minimum_size.x = minf(300.0, maxf(0, available / 4))
-		(_player_ui[player]["caption"] as Label).text = _player_name(player).to_upper().replace(
-			"PLAYER ", "P") if get_window().size.x < 600 else _player_name(player).to_upper()
-	var top := maxf(TOP_CLEARANCE, top_bar.get_global_rect().end.y + 20.0 * pixel_scale)
-	_world.position = Vector2(38, top)
-	_world.size = Vector2(screen.x - 76, maxf(120.0, _party_panel.position.y - top - 15.0))
+	var top := _shell_top_bar.get_global_rect().end.y + 8.0 * pixel_scale
+	_world.position = Vector2(0, top)
+	_world.size = Vector2(screen.x, maxf(1.0, _party_panel.position.y - top - 8 * pixel_scale))
 	_layout_results(pixel_scale)
 
 
