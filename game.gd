@@ -67,6 +67,7 @@ static func manifest() -> GameManifest:
 	game.copy["instructions_versus_summary"] += "\n\n" + "\n\n".join(rules)
 	var theme := GameTheme.new()
 	theme.logo_texture_path = Options.ROOT + "assets/game-icon.svg"
+	theme.cover_texture_path = Options.ROOT + "assets/cover.png"
 	theme.accent = Color("f6c453")
 	theme.logo_color = Color.WHITE
 	theme.plaque_color = Color("163e47")
